@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vyúčtování pracovní cesty – ZŠ Litomyšl</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #e8e8e0;
+            padding: 15px;
+            font-size: 11px;
+        }
+
+        .container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: #fffef5;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+        }
+
+        /* HLAVIČKA */
+        .header {
+            background: #f5f0c8;
+            border: 2px solid #333;
+            display: grid;
+            grid-template-columns: 1fr auto;
+        }
+        .header-left { padding: 8px 12px; border-right: 2px solid #333; }
+        .header-left h1 { font-size: 22px; font-weight: 900; letter-spacing: 2px; color: #111; text-transform: uppercase; }
+        .header-left .skola { font-size: 10px; color: #444; margin-top: 2px; }
+        .header-right { width: 160px; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; }
+
+        .header-field { display: flex; align-items: baseline; gap: 4px; font-size: 10px; }
+        .header-field label { white-space: nowrap; font-size: 9px; font-weight: 700; color: #333; }
+        .header-field input { border: none; border-bottom: 1px solid #888; background: transparent; font-size: 11px; width: 100%; padding: 1px 2px; font-family: inherit; }
+        .header-field input:focus { outline: none; border-bottom: 2px solid #4a7c59; }
+
+        /* Sekce */
+        .section { border: 1px solid #bbb; border-top: none; padding: 8px 10px; background: #fffef5; }
+        .section.yellow { background: #fdfae8; }
+        .section-title { font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #333; margin-bottom: 6px; padding-bottom: 3px; border-bottom: 1px solid #ccc; }
+
+        .field-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-end; }
+        .field { display: flex; flex-direction: column; flex: 1; }
+        .field.narrow { flex: 0 0 90px; }
+        .field.medium { flex: 0 0 140px; }
+        .field.wide { flex: 2; }
+
+        label { font-size: 9px; color: #555; margin-bottom: 2px; font-weight: 600; }
+
+        input[type="text"], input[type="date"], input[type="time"], input[type="number"], textarea {
+            width: 100%; border: none; border-bottom: 1px solid #888;
+            background: transparent; font-family: inherit; font-size: 11px;
+            padding: 2px 3px; color: #111; border-radius: 0;
+        }
+        input:focus, textarea:focus { outline: none; border-bottom: 2px solid #4a7c59; background: rgba(74,124,89,0.04); }
+        textarea { resize: none; }
+
+        select {
+            border: 1px solid #aaa; background: #fffef5; font-family: inherit;
+            font-size: 10px; padding: 2px 4px; border-radius: 2px; color: #111;
+        }
+        select:focus { outline: none; border-color: #4a7c59; }
+
+        hr.thick { border: none; border-top: 2px solid #333; margin: 0; }
+
+        .sec-num { font-weight: 900; color: #555; margin-right: 4px; }
+
+        /* Podpisy */
+        .podpis-box { display: flex; gap: 10px; margin-top: 8px; }
+        .podpis-field { flex: 1; text-align: center; }
+        .podpis-line { border-bottom: 1px solid #666; min-height: 28px; margin-bottom: 3px; }
+        .podpis-label { font-size: 8.5px; color: #666; line-height: 1.3; }
+
+        .razitko { border: 1px dashed #999; min-height: 55px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #bbb; font-style: italic; }
+
+        /* Výdaje tabulka */
+        .vydaje-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-bottom: 6px;
+        }
+        .vydaje-table th {
+            background: #e8e3b8;
+            border: 1px solid #999;
+            padding: 4px 5px;
+            text-align: center;
+            font-size: 9px;
+            font-weight: 700;
+            vertical-align: bottom;
+        }
+        .vydaje-table td {
+            border: 1px solid #bbb;
+            padding: 3px 5px;
+            vertical-align: middle;
+        }
+        .vydaje-table td input[type="text"],
+        .vydaje-table td input[type="number"],
+        .vydaje-table td input[type="time"] {
+            border: none;
+            border-bottom: 1px solid #ccc;
+            background: transparent;
+            font-size: 10px;
+            padding: 1px 2px;
+            width: 100%;
+        }
+        .vydaje-table td input:focus { outline: none; background: rgba(74,124,89,0.06); }
+
+        .oznaceni-cell {
+            text-align: center;
+            font-weight: 700;
+            font-size: 13px;
+            color: #333;
+            width: 28px;
+        }
+
+        .dt-pair { display: flex; flex-direction: column; gap: 2px; }
+        .dt-pair .dt-row { display: flex; align-items: center; gap: 3px; font-size: 9px; }
+        .dt-pair .dt-row span { color: #888; white-space: nowrap; min-width: 22px; }
+        .dt-pair .dt-row input { font-size: 9.5px; flex: 1; }
+
+        .transport-select { font-size: 9.5px; border: 1px solid #ccc; background: #fffef5; padding: 2px 3px; border-radius: 2px; width: 100%; font-family: inherit; }
+        .transport-select:focus { outline: none; border-color: #4a7c59; }
+
+        .amount-cell { display: flex; align-items: center; gap: 3px; }
+        .amount-cell input { text-align: right; }
+        .currency-select { font-size: 9px; border: 1px solid #ccc; background: #fffef5; padding: 1px 2px; border-radius: 2px; font-family: inherit; flex-shrink: 0; }
+
+        .delete-btn {
+            background: none; border: none; color: #c0392b; cursor: pointer;
+            font-size: 14px; padding: 0 2px; line-height: 1;
+        }
+        .delete-btn:hover { color: #e74c3c; }
+
+        /* Přidat tlačítko */
+        .add-menu-wrap { position: relative; display: inline-block; margin-bottom: 8px; }
+        .add-btn {
+            background: #4a7c59; color: white; border: none; border-radius: 3px;
+            padding: 5px 14px; font-size: 12px; cursor: pointer; font-family: inherit;
+            font-weight: 600; display: flex; align-items: center; gap: 5px;
+        }
+        .add-btn:hover { background: #3a6349; }
+        .add-dropdown {
+            display: none; position: absolute; left: 0; top: 100%; margin-top: 2px;
+            background: white; border: 1px solid #aaa; border-radius: 3px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15); z-index: 100; min-width: 220px;
+        }
+        .add-dropdown.open { display: block; }
+        .add-dropdown button {
+            display: block; width: 100%; text-align: left; padding: 7px 12px;
+            border: none; background: none; font-size: 11px; cursor: pointer;
+            font-family: inherit; color: #222;
+        }
+        .add-dropdown button:hover { background: #f0f5f0; color: #2d5a2d; }
+        .add-dropdown button + button { border-top: 1px solid #eee; }
+
+        /* Stravné */
+        .stravne-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-bottom: 6px;
+        }
+        .stravne-table th {
+            background: #e8e3b8;
+            border: 1px solid #999;
+            padding: 4px 5px;
+            text-align: center;
+            font-size: 9px;
+            font-weight: 700;
+        }
+        .stravne-table td {
+            border: 1px solid #bbb;
+            padding: 4px 5px;
+            vertical-align: middle;
+        }
+        .stravne-table td.center { text-align: center; }
+
+        .stravne-checkbox-wrap { display: flex; align-items: center; gap: 5px; justify-content: center; }
+        .stravne-checkbox-wrap input[type="checkbox"] { width: 13px; height: 13px; accent-color: #4a7c59; cursor: pointer; flex-shrink: 0; }
+        .stravne-checkbox-wrap span { font-size: 9px; color: #444; line-height: 1.2; }
+
+        /* Souhrnná tabulka */
+        .souhrn-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+        .souhrn-table th {
+            background: #e8e3b8;
+            border: 1px solid #999;
+            padding: 5px 8px;
+            text-align: center;
+            font-size: 9px;
+            font-weight: 700;
+            color: #333;
+        }
+        .souhrn-table th.celkem-th {
+            background: #d0c878;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+        .souhrn-table td { padding: 6px 8px; border: 1px solid #bbb; }
+        .souhrn-table td.celkem { background: #e8e3b8; font-weight: 700; font-size: 12px; }
+        .souhrn-table td.amount { text-align: right; font-weight: 600; }
+
+        /* Záloha/doplatek */
+        .zaloha-row { display: flex; gap: 12px; align-items: flex-end; margin-bottom: 6px; }
+        .zaloha-row .field { flex: 1; }
+
+        /* Patička */
+        .footer-prohlaseni {
+            font-size: 10px; font-style: italic; color: #333;
+            border-top: 1px solid #bbb; padding-top: 6px; margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .poznamky-box {
+            font-size: 9.5px; color: #444; background: #f9f9f0;
+            border: 1px solid #ddd; padding: 7px 10px; margin-top: 6px;
+            line-height: 1.5;
+        }
+        .poznamky-box strong { color: #333; }
+
+        /* Buttons */
+        .buttons {
+            display: flex; gap: 10px; justify-content: center; padding: 12px;
+            background: #f5f0c8; border: 1px solid #bbb; border-top: 2px solid #333;
+        }
+        button.main-btn {
+            padding: 8px 20px; border: none; border-radius: 3px; font-size: 13px;
+            cursor: pointer; font-family: inherit; font-weight: 600;
+            transition: all 0.2s; display: flex; align-items: center; gap: 5px;
+        }
+        .btn-save { background: #4a7c59; color: white; }
+        .btn-save:hover { background: #3a6349; }
+        .btn-print { background: #2a5080; color: white; }
+        .btn-print:hover { background: #1a4070; }
+        .btn-new { background: #b05030; color: white; }
+        .btn-new:hover { background: #904020; }
+
+        @media print {
+            body { background: white; padding: 0; font-size: 10px; }
+            .container { box-shadow: none; max-width: 100%; }
+            .buttons, .add-menu-wrap, .delete-btn { display: none !important; }
+            .vydaje-table td input, .stravne-table td input { border-bottom: 1px solid #999 !important; background: transparent !important; }
+            input, textarea { border: none !important; border-bottom: 1px solid #000 !important; background: transparent !important; }
+            .add-dropdown { display: none !important; }
+            @page { size: A4; margin: 8mm 10mm; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <div class="header-left">
+            <h1>Vyúčtování pracovní cesty</h1>
+            <div class="skola">Základní škola Litomyšl, Zámecká 496, okres Svitavy</div>
+        </div>
+        <div class="header-right">
+            <div class="header-field"><label>Útvar:</label><input type="text" id="utvar" value="ZŠ"></div>
+            <div class="header-field"><label>Os. číslo:</label><input type="text" id="oscislo"></div>
+        </div>
+    </div>
+
+    <div class="section yellow">
+        <div class="field-row">
+            <div class="field wide">
+                <label><span class="sec-num">1.</span>Příjmení, jméno, titul:</label>
+                <input type="text" id="jmeno">
+            </div>
+            <div class="field wide">
+                <label><span class="sec-num">2.</span>Bydliště:</label>
+                <input type="text" id="bydliste">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Přehled výdajů</div>
+
+        <table class="vydaje-table" id="vydaje-table">
+            <thead>
+                <tr>
+                    <th style="width:30px;">Ozn.<br>dokl.</th>
+                    <th style="width:22%">Od / Do<br><small>(datum, čas)</small></th>
+                    <th>Dopravní prostředek / Popis</th>
+                    <th style="width:18%">Druh výdaje</th>
+                    <th style="width:130px;">Částka</th>
+                    <th style="width:24px;"></th>
+                </tr>
+            </thead>
+            <tbody id="vydaje-tbody">
+                </tbody>
+        </table>
+
+        <div class="add-menu-wrap" id="add-menu-wrap">
+            <button class="add-btn" onclick="toggleAddMenu()">＋ Přidat výdaj</button>
+            <div class="add-dropdown" id="add-dropdown">
+                <button onclick="addRow('jizdne')">🚆 Jízdné a místní doprava</button>
+                <button onclick="addRow('vedlejsi')">🧾 Nutné vedlejší výdaje</button>
+                <button onclick="addRow('noclez')">🛏 Nocležné</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section yellow">
+        <div class="section-title">Stravné</div>
+        <div style="font-size:9.5px; color:#666; margin-bottom:6px; font-style:italic;">
+            Automaticky vypočítáno z časů výdajů. Sazby dle § 163 zákoníku práce (zaměstnanci ve veřejných službách).
+        </div>
+
+        <table class="stravne-table" id="stravne-table">
+            <thead>
+                <tr>
+                    <th style="width:110px;">Datum</th>
+                    <th style="width:80px;">Hodin na cestě</th>
+                    <th style="width:90px;">Stravné (Kč)</th>
+                    <th>Stravování poskytnuto bezplatně</th>
+                    <th style="width:90px;">Stravné po úpravě (Kč)</th>
+                </tr>
+            </thead>
+            <tbody id="stravne-tbody">
+                <tr id="stravne-placeholder">
+                    <td colspan="5" style="text-align:center; color:#aaa; font-style:italic; padding:10px;">
+                        Stravné se vypočítá automaticky po přidání výdajů s časovými údaji.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Souhrn</div>
+        <table class="souhrn-table">
+            <thead>
+                <tr>
+                    <th>Jízdné a místní doprava</th>
+                    <th>Nutné vedlejší výdaje</th>
+                    <th>Nocležné</th>
+                    <th>Stravné</th>
+                    <th class="celkem-th">CELKEM</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="amount" id="sum-jizdne">0,00 Kč</td>
+                    <td class="amount" id="sum-vedlejsi">0,00 Kč</td>
+                    <td class="amount" id="sum-noclez">0,00 Kč</td>
+                    <td class="amount" id="sum-stravne">0,00 Kč</td>
+                    <td class="amount celkem" id="sum-celkem">0,00 Kč</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="zaloha-row">
+            <div class="field">
+                <label>Záloha (Kč):</label>
+                <input type="number" id="zaloha" value="0" min="0" step="0.01" oninput="recalcSouhrn()">
+            </div>
+            <div class="field">
+                <label>Doplatek – Přeplatek (Kč):</label>
+                <input type="text" id="doplatek" readonly style="font-weight:700; color:#2d5a2d;">
+            </div>
+        </div>
+    </div>
+
+    <hr class="thick">
+    <div class="section yellow">
+        <div class="section-title">Vyúčtování pracovní cesty</div>
+        <div class="field-row">
+            <div class="field wide">
+                <label>Zpráva o výsledku pracovní cesty byla podána dne:</label>
+                <input type="text" id="zprava-datum">
+            </div>
+            <div class="field wide">
+                <label>Se způsobem provedení souhlasí:</label>
+                <input type="text" id="souhlas">
+            </div>
+            <div class="field wide">
+                <label>Datum a podpis odpovědného pracovníka:</label>
+                <input type="text" id="zprava-podpis">
+            </div>
+        </div>
+
+        <div class="podpis-box">
+            <div class="podpis-field">
+                <div class="podpis-line" style="background:#e8e3b8;"></div>
+                <div class="podpis-label">Datum a podpis pracovníka,<br>který upravil vyúčtování</div>
+            </div>
+            <div class="podpis-field">
+                <div class="podpis-line" style="background:#e8e3b8;"></div>
+                <div class="podpis-label">Datum a podpis příjemce<br>(průkaz totožnosti)</div>
+            </div>
+            <div class="podpis-field">
+                <div class="razitko">razítko</div>
+                <div class="podpis-label" style="text-align:center; margin-top:3px;">Datum a podpis pokladníka</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="footer-prohlaseni">
+            Prohlašuji, že jsem všechny údaje uvedl/a úplně a správně.
+        </div>
+    </div>
+
+    <div class="buttons">
+        <button class="main-btn btn-save" onclick="saveForm()">💾 Uložit</button>
+        <button class="main-btn btn-print" onclick="window.print()">🖨️ Tisknout</button>
+        <button class="main-btn btn-new" onclick="newDocument()">🗋 Nový dokument</button>
+    </div>
+
+</div>
+
+<script>
+// ── Stav ──────────────────────────────────────────────────────────────────────
+let rows = [];       // {id, type, letter, datum_od, cas_od, datum_do, cas_do, popis, castka, mena}
+let nextLetter = 0;  // 0=A, 1=B, ...
+
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+function getLetter() {
+    return LETTERS[nextLetter % LETTERS.length];
+}
+
+// ── Dropdown ──────────────────────────────────────────────────────────────────
+function toggleAddMenu() {
+    document.getElementById('add-dropdown').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+    if (!document.getElementById('add-menu-wrap').contains(e.target)) {
+        document.getElementById('add-dropdown').classList.remove('open');
+    }
+});
+
+// ── Přidat řádek ──────────────────────────────────────────────────────────────
+function addRow(type) {
+    document.getElementById('add-dropdown').classList.remove('open');
+    const letter = getLetter();
+    nextLetter++;
+    const id = Date.now();
+    
+    // Automatické předvyplnění data z předchozího řádku
+    let posledniDatumOd = '';
+    let posledniDatumDo = '';
+    if (rows.length > 0) {
+        posledniDatumOd = rows[rows.length - 1].datum_od || '';
+        posledniDatumDo = rows[rows.length - 1].datum_do || posledniDatumOd;
+    }
+
+    rows.push({ id, type, letter, datum_od: posledniDatumOd, datum_do: posledniDatumDo });
+    renderRows();
+}
+
+function deleteRow(id) {
+    rows = rows.filter(r => r.id !== id);
+    // přepočítat písmena
+    nextLetter = rows.length;
+    rows.forEach((r, i) => r.letter = LETTERS[i]);
+    renderRows();
+}
+
+// ── Render výdajů ─────────────────────────────────────────────────────────────
+function formatForDateInput(str) {
+    if (!str) return '';
+    if (str.includes('-')) return str; // už je to YYYY-MM-DD
+    const m = str.match(/(\d{1,2})[.\s]+(\d{1,2})[.\s]+(\d{4})/);
+    if (m) {
+        return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+    }
+    return str;
+}
+
+function renderRows() {
+    const tbody = document.getElementById('vydaje-tbody');
+    tbody.innerHTML = '';
+
+    rows.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.id = 'row-' + row.id;
+
+        const typeLabel = row.type === 'jizdne' ? 'Jízdné a místní doprava' : row.type === 'vedlejsi' ? 'Nutné vedlejší výdaje' : 'Nocležné';
+
+        // Sloupec 3: dopravní prostředek nebo popis
+        let col3;
+        if (row.type === 'jizdne') {
+            col3 = `<select class="transport-select" onchange="saveRowVal(${row.id},'popis',this.value); recalc()">
+                <option value="vlak" ${row.popis==='vlak'?'selected':''}>🚆 Vlak</option>
+                <option value="autobus" ${row.popis==='autobus'?'selected':''}>🚌 Autobus</option>
+                <option value="mhd" ${row.popis==='mhd'?'selected':''}>🚇 MHD</option>
+                <option value="auto" ${row.popis==='auto'?'selected':''}>🚗 Auto vlastní</option>
+                <option value="letadlo" ${row.popis==='letadlo'?'selected':''}>✈️ Letadlo</option>
+                <option value="pesky" ${row.popis==='pesky'?'selected':''}>🚶 Pěšky</option>
+            </select>`;
+        } else {
+            col3 = `<input type="text" placeholder="stručný popis" value="${row.popis||''}" oninput="saveRowVal(${row.id},'popis',this.value)">`;
+        }
+
+        tr.innerHTML = `
+            <td class="oznaceni-cell">${row.letter}</td>
+            <td>
+                <div class="dt-pair">
+                    <div class="dt-row"><span>Od:</span>
+                        <input type="date" value="${formatForDateInput(row.datum_od)}" style="width:105px;" oninput="saveRowVal(${row.id},'datum_od',this.value); recalc()">
+                        <input type="time" value="${row.cas_od||''}" oninput="saveRowVal(${row.id},'cas_od',this.value); recalc()">
+                    </div>
+                    <div class="dt-row"><span>Do:</span>
+                        <input type="date" value="${formatForDateInput(row.datum_do)}" style="width:105px;" oninput="saveRowVal(${row.id},'datum_do',this.value); recalc()">
+                        <input type="time" value="${row.cas_do||''}" oninput="saveRowVal(${row.id},'cas_do',this.value); recalc()">
+                    </div>
+                </div>
+            </td>
+            <td>${col3}</td>
+            <td style="font-size:9px; color:#555;">${typeLabel}</td>
+            <td>
+                <div class="amount-cell">
+                    <input type="number" min="0" step="1" value="${row.castka||''}" style="width:90px; text-align:right;" oninput="saveRowVal(${row.id},'castka',this.value); recalc()">
+                    <span style="font-size:10px; font-weight:600; color:#444;">Kč</span>
+                </div>
+            </td>
+            <td style="text-align:center;">
+                <button class="delete-btn" onclick="deleteRow(${row.id})" title="Odebrat">✕</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    recalc();
+}
+
+function saveRowVal(id, key, val) {
+    const row = rows.find(r => r.id === id);
+    if (row) row[key] = val;
+}
+
+// ── Stravné výpočet ──────────────────────────────────────────────────────────
+function parseDate(str) {
+    if (!str) return null;
+    
+    // Nový formát z kalendáře (RRRR-MM-DD)
+    const mDate = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (mDate) return new Date(parseInt(mDate[1]), parseInt(mDate[2])-1, parseInt(mDate[3]));
+
+    // Zpětná kompatibilita pro starší uložená data (DD.MM.RRRR)
+    const m = str.match(/(\d{1,2})[.\s]+(\d{1,2})[.\s]+(\d{4})/);
+    if (!m) return null;
+    return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+}
+
+function parseTime(str) {
+    if (!str) return null;
+    const m = str.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return null;
+    return { h: parseInt(m[1]), min: parseInt(m[2]) };
+}
+
+function toMinutes(t) { return t.h * 60 + t.min; }
+
+function formatHM(totalMins) {
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    return h + ':' + String(m).padStart(2,'0');
+}
+
+function addDays(date, n) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + n);
+    return d;
+}
+
+function dateKey(d) {
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function formatDateCZ(d) {
+    return d.getDate() + '. ' + (d.getMonth()+1) + '. ' + d.getFullYear();
+}
+
+// Stravná sazba bez krácení
+function stravneSazba(mins) {
+    if (mins >= 18*60) return 370;
+    if (mins > 12*60) return 236;
+    if (mins >= 5*60) return 155;
+    return 0;
+}
+
+// Krácení při bezplatném stravování
+function kraceníKoef(mins) {
+    if (mins >= 18*60) return 0.25;
+    if (mins > 12*60) return 0.35;
+    if (mins >= 5*60) return 0.70;
+    return 0;
+}
+
+// Stravné: sbírá datum_od+cas_od a datum_do+cas_do ze všech řádků
+function buildStravneData() {
+    // Najdeme globální Od a Do přes všechny řádky
+    let events = []; // {date, minOfDay, isStart}
+    rows.forEach(r => {
+        const dOd = parseDate(r.datum_od);
+        const tOd = parseTime(r.cas_od);
+        const dDo = parseDate(r.datum_do);
+        const tDo = parseTime(r.cas_do);
+        if (dOd && tOd) events.push({ date: dOd, minOfDay: toMinutes(tOd), isStart: true });
+        if (dDo && tDo) events.push({ date: dDo, minOfDay: toMinutes(tDo), isStart: false });
+    });
+
+    if (events.length === 0) return [];
+
+    // Najdeme nejdřívější začátek a nejpozdější konec
+    const starts = events.filter(e => e.isStart);
+    const ends = events.filter(e => !e.isStart);
+    if (!starts.length || !ends.length) return [];
+
+    starts.sort((a,b) => a.date - b.date || a.minOfDay - b.minOfDay);
+    ends.sort((a,b) => b.date - a.date || b.minOfDay - a.minOfDay);
+
+    const startDate = starts[0].date;
+    const startMin = starts[0].minOfDay;
+    const endDate = ends[0].date;
+    const endMin = ends[0].minOfDay;
+
+    // Vygeneruj dny
+    const days = [];
+    let cur = new Date(startDate);
+    while (cur <= endDate) {
+        const key = dateKey(cur);
+        let fromMin = 0;
+        let toMin = 24*60;
+        if (dateKey(cur) === dateKey(startDate)) fromMin = startMin;
+        if (dateKey(cur) === dateKey(endDate)) toMin = endMin;
+        const mins = Math.max(0, toMin - fromMin);
+        days.push({ date: new Date(cur), mins, key });
+        cur = addDays(cur, 1);
+    }
+    return days;
+}
+
+// stravné stav (zaškrtnutí bezplatného stravování) – uloženo jako mapa key->bool
+let bezplatneStravovani = {};
+
+function recalcStravne() {
+    const days = buildStravneData();
+    const tbody = document.getElementById('stravne-tbody');
+    tbody.innerHTML = '';
+
+    if (days.length === 0) {
+        tbody.innerHTML = `<tr id="stravne-placeholder"><td colspan="5" style="text-align:center; color:#aaa; font-style:italic; padding:10px;">Stravné se vypočítá automaticky po přidání výdajů s časovými údaji.</td></tr>`;
+        return;
+    }
+
+    days.forEach(day => {
+        const sazba = stravneSazba(day.mins);
+        const bezplatne = bezplatneStravovani[day.key] || false;
+        const kraceni = bezplatne ? kraceníKoef(day.mins) : 0;
+        const vysledek = Math.round(sazba * (1 - kraceni));
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${formatDateCZ(day.date)}</td>
+            <td style="text-align:center;">${day.mins >= 60 ? formatHM(day.mins) : (day.mins + ' min')}</td>
+            <td style="text-align:right;">${sazba > 0 ? sazba + ' Kč' : '–'}</td>
+            <td>
+                <div class="stravne-checkbox-wrap">
+                    <input type="checkbox" ${bezplatne ? 'checked' : ''} onchange="bezplatneStravovani['${day.key}']=this.checked; recalc()">
+                    <span>Stravování poskytnuto bezplatně</span>
+                </div>
+            </td>
+            <td style="text-align:right; font-weight:600;">${sazba > 0 ? vysledek + ' Kč' : '–'}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// ── Souhrn ────────────────────────────────────────────────────────────────────
+function recalcSouhrn() {
+    let jizdne = 0, vedlejsi = 0, noclez = 0;
+    rows.forEach(r => {
+        const v = parseFloat(r.castka) || 0;
+        if (r.type === 'jizdne') jizdne += v;
+        else if (r.type === 'vedlejsi') vedlejsi += v;
+        else if (r.type === 'noclez') noclez += v;
+    });
+
+    // stravné z tabulky
+    const days = buildStravneData();
+    let stravneCelkem = 0;
+    days.forEach(day => {
+        const sazba = stravneSazba(day.mins);
+        const bezplatne = bezplatneStravovani[day.key] || false;
+        const kraceni = bezplatne ? kraceníKoef(day.mins) : 0;
+        stravneCelkem += Math.round(sazba * (1 - kraceni));
+    });
+
+    const celkem = jizdne + vedlejsi + noclez + stravneCelkem;
+    const zaloha = parseFloat(document.getElementById('zaloha').value) || 0;
+    const doplatek = celkem - zaloha;
+
+    document.getElementById('sum-jizdne').textContent = fmtKc(jizdne);
+    document.getElementById('sum-vedlejsi').textContent = fmtKc(vedlejsi);
+    document.getElementById('sum-noclez').textContent = fmtKc(noclez);
+    document.getElementById('sum-stravne').textContent = fmtKc(stravneCelkem);
+    document.getElementById('sum-celkem').textContent = fmtKc(celkem);
+    document.getElementById('doplatek').value = (doplatek >= 0 ? '+' : '') + fmtKc(doplatek);
+}
+
+function fmtKc(v) {
+    return v.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Kč';
+}
+
+function recalc() {
+    recalcStravne();
+    recalcSouhrn();
+}
+
+// ── Nový dokument ─────────────────────────────────────────────────────────────
+const keepIds = ['jmeno','bydliste','utvar','oscislo'];
+
+function newDocument() {
+    if (!confirm('Opravdu chcete smazat vyplněná data?\n(Jméno, bydliště, osobní číslo a útvar budou zachovány.)')) return;
+    document.querySelectorAll('input[type="text"], input[type="date"], input[type="time"], input[type="number"], textarea').forEach(el => {
+        if (!keepIds.includes(el.id)) el.value = el.id === 'zaloha' ? '0' : '';
+    });
+    rows = [];
+    nextLetter = 0;
+    bezplatneStravovani = {};
+    renderRows();
+}
+
+// ── Uložit ────────────────────────────────────────────────────────────────────
+function saveForm() {
+    // Uložení stavu rows a bezplatneStravovani do skrytého elementu
+    let stateEl = document.getElementById('__state__');
+    if (!stateEl) { stateEl = document.createElement('script'); stateEl.id = '__state__'; stateEl.type = 'application/json'; document.body.appendChild(stateEl); }
+    stateEl.textContent = JSON.stringify({ rows, nextLetter, bezplatneStravovani });
+
+    document.querySelectorAll('input[type="text"], input[type="date"], input[type="time"], input[type="number"]').forEach(el => el.setAttribute('value', el.value));
+    document.querySelectorAll('textarea').forEach(el => el.textContent = el.value);
+
+    const jmeno = document.getElementById('jmeno').value;
+    const filename = 'vyuctovani-' + (jmeno ? jmeno.replace(/[^a-z0-9]/gi,'-').toLowerCase() : 'formular') + '.html';
+    const blob = new Blob([document.documentElement.outerHTML], {type:'text/html;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+    URL.revokeObjectURL(url);
+    alert('Formulář byl uložen!');
+}
+
+// ── Init: načtení uloženého stavu ─────────────────────────────────────────────
+window.addEventListener('load', () => {
+    const stateEl = document.getElementById('__state__');
+    if (stateEl) {
+        try {
+            const s = JSON.parse(stateEl.textContent);
+            rows = s.rows || [];
+            nextLetter = s.nextLetter || 0;
+            bezplatneStravovani = s.bezplatneStravovani || {};
+            renderRows();
+        } catch(e) { recalc(); }
+    } else {
+        recalc();
+    }
+});
+</script>
+</body>
+</html>

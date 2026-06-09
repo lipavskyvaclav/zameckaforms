@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Povolení exkurze</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            padding: 15mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 3px;
+            font-size: 11px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="time"],
+        textarea {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid #999;
+            border-radius: 3px;
+            font-size: 11px;
+            font-family: Arial, sans-serif;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        textarea {
+            min-height: 50px;
+            resize: vertical;
+        }
+
+        textarea.auto-expand {
+            min-height: 28px;
+            overflow: hidden;
+            resize: none;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .row .form-group {
+            flex: 1;
+        }
+
+        .row-3 {
+            display: flex;
+            gap: 10px;
+        }
+
+        .row-3 .form-group {
+            flex: 1;
+        }
+
+        .info-box {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 8px;
+            margin: 10px 0;
+            font-size: 10px;
+            line-height: 1.4;
+            font-style: italic;
+        }
+
+        .signature-section {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 2px solid #333;
+        }
+
+        .stamp-box {
+            width: 100%;
+            height: 22mm;
+            border: 1px dashed #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .row-stamp {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .row-stamp .form-group {
+            flex: 1;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .save-btn {
+            background-color: #2196F3;
+        }
+
+        .save-btn:hover {
+            background-color: #0b7dda;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 10mm;
+                max-width: 100%;
+            }
+
+            .buttons {
+                display: none;
+            }
+
+            input[type="text"],
+            input[type="date"],
+            input[type="time"],
+            textarea {
+                border: none;
+                border-bottom: 1px solid #000;
+                border-radius: 0;
+                padding: 2px 0;
+                background: transparent;
+            }
+
+            label {
+                font-size: 10px;
+            }
+
+            h1 {
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+
+            .form-group {
+                margin-bottom: 8px;
+            }
+
+            .info-box {
+                font-size: 9px;
+                padding: 6px;
+            }
+
+            @page {
+                size: A4;
+                margin: 10mm;
+            }
+
+            .stamp-box {
+                border-color: #000;
+                color: #ccc;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Povolení exkurze / školního výletu / kurzu</h1>
+
+        <div class="form-group">
+            <label for="nazev">Název akce:</label>
+            <input type="text" id="nazev">
+        </div>
+
+        <div class="form-group">
+            <label for="kam">Kam:</label>
+            <input type="text" id="kam">
+        </div>
+
+        <div class="row-3">
+            <div class="form-group">
+                <label for="odjezd-datum">Odjezd (datum):</label>
+                <input type="date" id="odjezd-datum">
+            </div>
+            <div class="form-group">
+                <label for="odjezd-cas">Odjezd (čas):</label>
+                <input type="time" id="odjezd-cas">
+            </div>
+            <div class="form-group">
+                <label for="odjezd-misto">Odjezd (místo):</label>
+                <input type="text" id="odjezd-misto">
+            </div>
+        </div>
+
+        <div class="row-3">
+            <div class="form-group">
+                <label for="prijezd-datum">Příjezd (datum):</label>
+                <input type="date" id="prijezd-datum">
+            </div>
+            <div class="form-group">
+                <label for="prijezd-cas">Příjezd (čas):</label>
+                <input type="time" id="prijezd-cas">
+            </div>
+            <div class="form-group">
+                <label for="prijezd-misto">Příjezd (místo):</label>
+                <input type="text" id="prijezd-misto">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label for="trida">Třída/skupina:</label>
+                <textarea id="trida" rows="1" class="auto-expand"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="vedouci">Vedoucí akce:</label>
+                <textarea id="vedouci" rows="1" class="auto-expand"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="dohled">Dohled:</label>
+                <textarea id="dohled" rows="1" class="auto-expand"></textarea>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <strong>Poučení žáků:</strong> Potvrzuji, že účastníci akce byli zvlášť poučeni o bezpečnosti a pravidlech chování a jsou si vědomi případných následků a postihů, které by následovaly v případě porušení daných předpisů a pravidel.
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label for="datum-pouceni">Datum poučení:</label>
+                <input type="date" id="datum-pouceni">
+            </div>
+            <div class="form-group">
+                <label for="podpis-pouceni">Podpis:</label>
+                <input type="text" id="podpis-pouceni">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="pocet-zaku">Počet žáků, kteří se zúčastní (+ třída):</label>
+            <input type="text" id="pocet-zaku">
+        </div>
+
+        <div class="form-group">
+            <label for="seznam-zaku">Seznam žáků (nebo příloha):</label>
+            <textarea id="seznam-zaku" rows="3" class="auto-expand"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="nezucastneni">Seznam žáků, kteří se nezúčastní, třída a místo, kde se budou v době akce zdržovat:</label>
+            <textarea id="nezucastneni" rows="2" class="auto-expand" placeholder="např. T. Nováková ze III.B v III.A, J. Škoch z III.B doma-nemoc"></textarea>
+        </div>
+
+        <div class="signature-section">
+            <div class="row-stamp">
+                <div class="form-group">
+                    <label for="akci-povolil">Akci povolil:</label>
+                    <input type="text" id="akci-povolil">
+                </div>
+                <div class="form-group">
+                    <label for="datum-povoleni">Datum:</label>
+                    <input type="text" id="datum-povoleni">
+                </div>
+                <div class="form-group">
+                    <label>Razítko školy:</label>
+                    <div class="stamp-box">razítko</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button class="save-btn" onclick="saveForm()">💾 Uložit</button>
+            <button onclick="window.print()">🖨️ Vytisknout</button>
+        </div>
+    </div>
+
+    <script>
+        // Automatické zvětšování textarea
+        function autoExpand(field) {
+            field.style.height = 'inherit';
+            const computed = window.getComputedStyle(field);
+            const height = parseInt(computed.getPropertyValue('border-top-width'), 10)
+                         + field.scrollHeight
+                         + parseInt(computed.getPropertyValue('border-bottom-width'), 10);
+            field.style.height = height + 'px';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const autoExpandFields = document.querySelectorAll('.auto-expand');
+            autoExpandFields.forEach(field => {
+                field.addEventListener('input', function() {
+                    autoExpand(this);
+                });
+                // Inicializace při načtení
+                autoExpand(field);
+            });
+        });
+
+        function saveForm() {
+            // Uložení hodnot do atributů value/textContent
+            document.querySelectorAll('input[type="text"], input[type="date"], input[type="time"]').forEach(input => {
+                input.setAttribute('value', input.value);
+            });
+            
+            document.querySelectorAll('textarea').forEach(textarea => {
+                textarea.textContent = textarea.value;
+            });
+            
+            // Získání celého HTML dokumentu
+            const htmlContent = document.documentElement.outerHTML;
+            
+            // Vytvoření názvu souboru
+            const nazev = document.getElementById('nazev').value;
+            const filename = 'povoleni-exkurze-' + (nazev ? nazev.replace(/[^a-z0-9]/gi, '-').toLowerCase() : 'formular') + '.html';
+            
+            // Stažení HTML souboru
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert('Formulář byl uložen jako HTML!');
+        }
+
+        window.addEventListener('load', function() {
+            // Načtení uložených dat při otevření
+            const autoExpandFields = document.querySelectorAll('.auto-expand');
+            autoExpandFields.forEach(field => {
+                autoExpand(field);
+            });
+        });
+    </script>
+</body>
+</html>
