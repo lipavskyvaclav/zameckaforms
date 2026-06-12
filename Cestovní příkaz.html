@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cestovní příkaz – ZŠ Litomyšl</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #e8e8e0;
+            padding: 10px;
+            font-size: 11px;
+        }
+
+        .container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: #fffef5;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+        }
+
+        /* HLAVIČKA */
+        .header {
+            background: #f5f0c8;
+            border: 2px solid #333;
+            display: grid;
+            grid-template-columns: 1fr auto;
+        }
+
+        .header-left {
+            padding: 6px 10px;
+            border-right: 2px solid #333;
+        }
+
+        .header-left h1 {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #111;
+            text-transform: uppercase;
+        }
+
+        .header-left .skola {
+            font-size: 10px;
+            color: #444;
+            margin-top: 2px;
+        }
+
+        .header-right {
+            width: 160px;
+            padding: 4px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        /* Obecné sekce */
+        .section {
+            border: 1px solid #bbb;
+            border-top: none;
+            padding: 5px 8px;
+            background: #fffef5;
+        }
+
+        .section.yellow {
+            background: #fdfae8;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #333;
+            margin-bottom: 4px;
+            padding-bottom: 2px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        /* Základní políčka */
+        .field-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 3px;
+            align-items: flex-end;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .field.narrow { flex: 0 0 70px; }
+        .field.medium { flex: 0 0 120px; }
+        .field.wide { flex: 2; }
+
+        label {
+            font-size: 9px;
+            color: #555;
+            margin-bottom: 1px;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="time"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid #888;
+            background: transparent;
+            font-family: inherit;
+            font-size: 11px;
+            padding: 1px 2px;
+            color: #111;
+            border-radius: 0;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-bottom: 2px solid #4a7c59;
+            background: rgba(74,124,89,0.04);
+        }
+
+        textarea {
+            resize: none;
+            overflow: hidden;
+        }
+
+        /* Tabulka cest */
+        .trip-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-bottom: 4px;
+        }
+
+        .trip-table th {
+            background: #e8e3b8;
+            border: 1px solid #999;
+            padding: 2px 4px;
+            text-align: center;
+            font-size: 9px;
+            font-weight: 700;
+            width: 25%;
+        }
+
+        .trip-table td {
+            border: 1px solid #bbb;
+            padding: 2px 4px;
+        }
+
+        .trip-table td input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 10px;
+            padding: 1px;
+        }
+
+        .trip-table td input:focus {
+            outline: none;
+            background: rgba(74,124,89,0.06);
+        }
+
+        /* Dopravní prostředek */
+        .transport-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 10px;
+            margin: 3px 0;
+        }
+
+        .transport-option {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+        }
+
+        .transport-option input[type="checkbox"] {
+            width: 13px;
+            height: 13px;
+            cursor: pointer;
+            accent-color: #4a7c59;
+            flex-shrink: 0;
+        }
+
+        .transport-option span {
+            font-size: 10px;
+            user-select: none;
+        }
+
+        /* Vozidlo sekce */
+        .vozidlo-box {
+            background: #f0f5f0;
+            border: 1px solid #8aab8a;
+            padding: 6px 8px;
+            margin-top: 4px;
+            border-radius: 2px;
+        }
+
+        .vozidlo-box .section-title {
+            color: #2d5a2d;
+            border-bottom-color: #8aab8a;
+        }
+
+        .prohlaseni {
+            font-size: 9px;
+            font-style: italic;
+            color: #444;
+            background: #eaf2ea;
+            border-left: 3px solid #4a7c59;
+            padding: 4px 6px;
+            margin: 4px 0;
+            line-height: 1.3;
+        }
+
+        /* Podpisy */
+        .podpis-box {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .podpis-field {
+            flex: 1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .podpis-line {
+            border-bottom: 1px solid #666;
+            min-height: 26px;
+            margin-bottom: 3px;
+            width: 100%;
+        }
+
+        .podpis-label {
+            font-size: 8px;
+            color: #666;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        /* Poznámka */
+        #poznamka {
+            min-height: 24px;
+        }
+
+        /* Tlačítka */
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            padding: 10px;
+            background: #f5f0c8;
+            border: 1px solid #bbb;
+            border-top: 2px solid #333;
+        }
+
+        button {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-save { background: #4a7c59; color: white; }
+        .btn-save:hover { background: #3a6349; }
+        .btn-print { background: #2a5080; color: white; }
+        .btn-print:hover { background: #1a4070; }
+        .btn-new { background: #b05030; color: white; }
+        .btn-new:hover { background: #904020; }
+
+        /* Inline číslování sekcí */
+        .sec-num {
+            font-weight: 900;
+            color: #555;
+            margin-right: 4px;
+        }
+
+        /* Separator */
+        hr.thick {
+            border: none;
+            border-top: 2px solid #333;
+            margin: 0;
+        }
+
+        /* Hlavičkové políčka vpravo */
+        .header-field {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            font-size: 10px;
+        }
+
+        .header-field label {
+            white-space: nowrap;
+            font-size: 9px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .header-field input {
+            border: none;
+            border-bottom: 1px solid #888;
+            background: transparent;
+            font-size: 11px;
+            width: 100%;
+            padding: 0 2px;
+        }
+
+        .header-field input:focus {
+            outline: none;
+            border-bottom: 2px solid #4a7c59;
+        }
+
+        .np-doba {
+            border: 1px solid #999;
+            padding: 3px 5px;
+            margin-top: 3px;
+        }
+
+        .np-doba-title {
+            font-size: 9px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .np-doba-row {
+            display: flex;
+            gap: 6px;
+            align-items: flex-end;
+        }
+
+        .np-doba-row .field label { font-size: 9px; }
+
+        @media print {
+            body { background: white; padding: 0; font-size: 10px; }
+            .container { box-shadow: none; max-width: 100%; }
+            .buttons { display: none; }
+            .vozidlo-box { border-color: #999; background: white; }
+            .prohlaseni { background: #f5f5f5; }
+            input, textarea, select {
+                border: none !important;
+                border-bottom: 1px solid #000 !important;
+                background: transparent !important;
+            }
+            .trip-table td input { border-bottom: 1px solid #999 !important; }
+            .trip-table td textarea { border-bottom: none !important; }
+            @page { size: A4; margin: 6mm 8mm; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- HLAVIČKA -->
+    <div class="header">
+        <div class="header-left">
+            <h1>Cestovní příkaz</h1>
+            <div class="skola">Základní škola Litomyšl, Zámecká 496, okres Svitavy</div>
+        </div>
+        <div class="header-right">
+            <div class="header-field">
+                <label>Útvar:</label>
+                <input type="text" id="utvar" value="ZŠ">
+            </div>
+            <div class="header-field">
+                <label>Os. číslo:</label>
+                <input type="text" id="oscislo">
+            </div>
+            <div class="np-doba">
+                <div class="np-doba-title">Normální pracovní doba</div>
+                <div class="np-doba-row">
+                    <div class="field">
+                        <label>od</label>
+                        <input type="time" id="prac-od">
+                    </div>
+                    <div class="field">
+                        <label>do</label>
+                        <input type="time" id="prac-do">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZÁKLADNÍ ÚDAJE -->
+    <div class="section yellow">
+        <div class="field-row">
+            <div class="field wide">
+                <label><span class="sec-num">1.</span>Příjmení, jméno, titul:</label>
+                <input type="text" id="jmeno">
+            </div>
+        </div>
+        <div class="field-row">
+            <div class="field wide">
+                <label><span class="sec-num">2.</span>Bydliště:</label>
+                <input type="text" id="bydliste">
+            </div>
+        </div>
+    </div>
+
+    <!-- TABULKA CEST -->
+    <div class="section">
+        <table class="trip-table">
+            <thead>
+                <tr>
+                    <th>Počátek cesty<br><small>(adresa, datum, čas)</small></th>
+                    <th>Místo jednání</th>
+                    <th>Účel cesty</th>
+                    <th>Konec cesty<br><small>(adresa, datum, čas)</small></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding:4px 5px;">
+                        <input type="text" id="trip-start-adr" placeholder="adresa" style="width:100%; border:none; border-bottom:1px solid #ccc; background:transparent; font-size:11px; padding:2px; margin-bottom:4px;">
+                        <div style="display:flex; align-items:center; gap:4px; margin-bottom:3px;">
+                            <span style="font-size:9px; color:#888; white-space:nowrap;">datum</span>
+                            <input type="date" id="trip-start-dat" style="flex:1; border:none; border-bottom:1px solid #ccc; background:transparent; font-size:10px; padding:1px;">
+                        </div>
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <span style="font-size:9px; color:#888; white-space:nowrap;">čas</span>
+                            <input type="time" id="trip-start-cas" style="flex:1; border:none; border-bottom:1px solid #ccc; background:transparent; font-size:10px; padding:1px;">
+                        </div>
+                    </td>
+                    <td style="padding:4px 5px;">
+                        <textarea id="trip-misto" style="width:100%; border:none; background:transparent; font-size:11px; padding:2px; min-height:55px; resize:vertical; font-family:inherit;"></textarea>
+                    </td>
+                    <td style="padding:4px 5px;">
+                        <textarea id="trip-ucel" style="width:100%; border:none; background:transparent; font-size:11px; padding:2px; min-height:55px; resize:vertical; font-family:inherit;"></textarea>
+                    </td>
+                    <td style="padding:4px 5px;">
+                        <input type="text" id="trip-end-adr" placeholder="adresa" style="width:100%; border:none; border-bottom:1px solid #ccc; background:transparent; font-size:11px; padding:2px; margin-bottom:4px;">
+                        <div style="display:flex; align-items:center; gap:4px; margin-bottom:3px;">
+                            <span style="font-size:9px; color:#888; white-space:nowrap;">datum</span>
+                            <input type="date" id="trip-end-dat" style="flex:1; border:none; border-bottom:1px solid #ccc; background:transparent; font-size:10px; padding:1px;">
+                        </div>
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <span style="font-size:9px; color:#888; white-space:nowrap;">čas</span>
+                            <input type="time" id="trip-end-cas" style="flex:1; border:none; border-bottom:1px solid #ccc; background:transparent; font-size:10px; padding:1px;">
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SPOLUCESTUJÍCÍ + DOPRAVNÍ PROSTŘEDEK -->
+    <div class="section yellow">
+        <div class="field-row">
+            <div class="field wide">
+                <label><span class="sec-num">3.</span>Spolucestující:</label>
+                <input type="text" id="spolucestujici">
+            </div>
+        </div>
+
+        <div style="margin-bottom:4px;">
+            <label style="display:block;margin-bottom:2px;"><span class="sec-num">4.</span>Určený dopravní prostředek:</label>
+            <div class="transport-group">
+                <label class="transport-option">
+                    <input type="checkbox" id="t-vlak"> <span>Osobní vlak</span>
+                </label>
+                <label class="transport-option">
+                    <input type="checkbox" id="t-rychlik"> <span>Rychlík</span>
+                </label>
+                <label class="transport-option">
+                    <input type="checkbox" id="t-autobus"> <span>Autobus</span>
+                </label>
+                <label class="transport-option">
+                    <input type="checkbox" id="t-mhd"> <span>MHD</span>
+                </label>
+                <label class="transport-option">
+                    <input type="checkbox" id="t-auto" onchange="toggleVozidlo()"> <span>Auto vlastní</span>
+                </label>
+                <label class="transport-option">
+                    <input type="checkbox" id="t-letadlo"> <span>Letadlo</span>
+                </label>
+                <label class="transport-option">
+                    <input type="checkbox" id="t-pesky"> <span>Pěšky</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Sekce vlastního vozidla -->
+        <div id="vozidlo-section" class="vozidlo-box" style="display:none;">
+            <div class="section-title">Žádost o povolení použití vlastního vozidla</div>
+
+            <div class="field-row">
+                <div class="field medium">
+                    <label>SPZ / RZ vozidla:</label>
+                    <input type="text" id="spz">
+                </div>
+                <div class="field wide">
+                    <label>Značka a model vozidla:</label>
+                    <input type="text" id="vozidlo-model">
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field wide">
+                    <label>Číslo pojistky odpovědnosti z provozu vozidla (povinné ručení):</label>
+                    <input type="text" id="pojistka-povinne">
+                </div>
+                <div class="field wide">
+                    <label>Číslo havarijního pojištění:</label>
+                    <input type="text" id="pojistka-havarijni">
+                </div>
+            </div>
+
+            <div class="prohlaseni">
+                Případné škody vzniklé na osobním vozidle během pracovní cesty budou kryty havarijní pojistkou a vůči Základní škole Litomyšl, Zámecká 496, okres Svitavy nebudu vznášet žádné požadavky na úhradu případné škody.
+            </div>
+
+            <div style="font-size:9px; font-weight:600; color:#2d5a2d; background:#eaf2ea; border-left:3px solid #4a7c59; padding:4px 6px; margin:4px 0;">
+                Dle vzájemné dohody bude použito soukromého vozidla dle platného jízdného veřejným dopravním prostředkem.
+            </div>
+
+            <div class="podpis-box" style="margin-top:6px;">
+                <div class="podpis-field">
+                    <div class="podpis-line"></div>
+                    <div class="podpis-label">Datum a podpis žadatele</div>
+                </div>
+                <div class="podpis-field">
+                    <div class="podpis-line"></div>
+                    <div class="podpis-label">Datum a podpis oprávněného pracovníka (povolení)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZÁLOHA -->
+    <div class="section">
+        <div class="field-row">
+            <div class="field">
+                <label><span class="sec-num">5.</span>Povolená záloha (Kč):</label>
+                <input type="text" id="zaloha-castka">
+            </div>
+            <div class="field">
+                <label>Vyplacená dne:</label>
+                <input type="text" id="zaloha-datum">
+            </div>
+            <div class="field">
+                <label>Pokladní doklad č.:</label>
+                <input type="text" id="zaloha-doklad">
+            </div>
+        </div>
+
+        <div class="podpis-box" style="margin-top:6px;">
+            <div class="podpis-field">
+                <div class="podpis-line" style="background:#e8e3b8;"></div>
+                <div class="podpis-label">Souhlas pracovníka s vysláním na služební cestu 👈</div>
+            </div>
+            <div class="podpis-field">
+                <div class="podpis-line" style="background:#e8e3b8;"></div>
+                <div class="podpis-label">Podpis pokladníka</div>
+            </div>
+            <div class="podpis-field">
+                <div class="podpis-line" style="background:#e8e3b8;"></div>
+                <div class="podpis-label">Podpis pracovníka oprávněného k povolení cesty</div>
+            </div>
+            <div class="podpis-field" style="flex: 0 0 100px;">
+                <input type="date" id="povoleni-datum" style="border:none; border-bottom:1px solid #888; background:transparent; font-size:11px; padding:1px 2px; width:100%; margin-bottom:2px;">
+                <div class="podpis-label" style="text-align:center;">Datum</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VYÚČTOVÁNÍ -->
+    <hr class="thick">
+    <div class="section">
+        <div class="section-title">Vyúčtování pracovní cesty</div>
+        <div class="field-row">
+            <div class="field wide">
+                <label><span class="sec-num">6.</span>Zpráva o výsledku pracovní cesty podána dne:</label>
+                <input type="text" id="zprava-datum">
+            </div>
+            <div class="field wide">
+                <label>Datum a podpis odpovědného pracovníka:</label>
+                <input type="text" id="zprava-podpis">
+            </div>
+            <div class="field wide">
+                <label>Se způsobem provedení souhlasí:</label>
+                <input type="text" id="souhlas">
+            </div>
+        </div>
+    </div>
+
+    <!-- POKLADNÍ DOKLAD -->
+    <div class="section yellow">
+        <div class="section-title"><span class="sec-num">7.</span>Výdajový a příjmový pokladní doklad</div>
+
+        <div class="field-row" style="align-items: center;">
+            <div class="field narrow">
+                <label>Číslo:</label>
+                <input type="text" id="doklad-cislo">
+            </div>
+            <div style="flex:2; display:flex; align-items:flex-end; gap:4px; margin-bottom: 1px;">
+                <span style="font-size:10px; color:#444;">Účtovaná náhrada upravena na:</span>
+                <input type="text" id="nahr-castka" style="width:70px; border:none; border-bottom:1px solid #888; background:transparent; font-size:11px; font-weight:700; padding:1px; color:#111; text-align:right;">
+                <span style="font-size:10px; font-weight:700;">Kč</span>
+            </div>
+            <div class="field">
+                <label>Vyplacená záloha (Kč):</label>
+                <input type="text" id="vyp-zaloha">
+            </div>
+            <div class="field">
+                <label>Doplatek / přeplatek (Kč):</label>
+                <input type="text" id="doplatek">
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label>Slovy:</label>
+                <input type="text" id="slovy">
+            </div>
+        </div>
+
+        <div class="podpis-box" style="margin-top:8px;">
+            <div class="podpis-field">
+                <div class="podpis-line" style="background:#e8e3b8;"></div>
+                <div class="podpis-label">Datum a podpis pracovníka,<br>který upravil vyúčtování</div>
+            </div>
+            <div class="podpis-field">
+                <div class="podpis-line" style="background:#e8e3b8;"></div>
+                <div class="podpis-label">Datum a podpis příjemce 👈<br>(průkaz totožnosti)</div>
+            </div>
+            <div class="podpis-field">
+                <div class="podpis-line" style="background:#e8e3b8;"></div>
+                <div class="podpis-label">Datum a podpis pokladníka</div>
+            </div>
+            <div class="podpis-field">
+                <div class="podpis-line" style="background:#e8e3b8;"></div>
+                <div class="podpis-label">Schválil</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POZNÁMKA -->
+    <div class="section">
+        <label><span class="sec-num"></span><strong>Poznámka:</strong></label>
+        <textarea id="poznamka" rows="1"></textarea>
+    </div>
+
+    <!-- TLAČÍTKA -->
+    <div class="buttons">
+        <button class="btn-save" onclick="saveForm()">💾 Uložit</button>
+        <button class="btn-print" onclick="window.print()">🖨️ Tisknout</button>
+        <button class="btn-new" onclick="newDocument()">🗋 Nový dokument</button>
+    </div>
+
+</div>
+
+<script>
+    function toggleVozidlo() {
+        const checked = document.getElementById('t-auto').checked;
+        document.getElementById('vozidlo-section').style.display = checked ? 'block' : 'none';
+    }
+
+    const keepIds = ['jmeno','bydliste','utvar','oscislo','prac-od','prac-do'];
+
+    function newDocument() {
+        if (!confirm('Opravdu chcete smazat vyplněná data a začít nový dokument?\n(Jméno, bydliště, osobní číslo, útvar a pracovní doba budou zachovány.)')) return;
+        document.querySelectorAll('input[type="text"], input[type="date"], input[type="time"], textarea').forEach(el => {
+            if (!keepIds.includes(el.id)) el.value = '';
+        });
+        document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        document.getElementById('vozidlo-section').style.display = 'none';
+    }
+
+    function saveForm() {
+        document.querySelectorAll('input[type="text"], input[type="date"], input[type="time"]').forEach(el => {
+            el.setAttribute('value', el.value);
+        });
+        document.querySelectorAll('textarea').forEach(el => {
+            el.textContent = el.value;
+        });
+        document.querySelectorAll('input[type="checkbox"]').forEach(el => {
+            if (el.checked) el.setAttribute('checked', 'checked');
+            else el.removeAttribute('checked');
+        });
+
+        const vozidloVisible = document.getElementById('vozidlo-section').style.display !== 'none';
+        const jmeno = document.getElementById('jmeno').value;
+        const filename = 'cestovni-prikaz-' + (jmeno ? jmeno.replace(/[^a-z0-9áčďéěíňóřšťúůýž]/gi, '-').toLowerCase() : 'formular') + '.html';
+
+        let html = document.documentElement.outerHTML;
+        html = html.replace(/<!--RESTORE-->[\s\S]*?<!--\/RESTORE-->/g, '');
+        const restoreScript = `<!--RESTORE--><script>window.addEventListener('load',function(){var v=document.getElementById('vozidlo-section');if(v)v.style.display='${vozidloVisible?"block":"none"}';});<\/script><!--/RESTORE-->`;
+        html = html.replace('</body>', restoreScript + '</body>');
+
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert('Formulář byl uložen!');
+    }
+</script>
+</body>
+</html>
