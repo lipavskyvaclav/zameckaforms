@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Čtvrtletní check-in třídního učitele</title>
+<style>
+  :root{
+    --ink:#111;
+    --gray-1:#f4f4f4;
+    --gray-2:#e4e4e4;
+    --gray-3:#c9c9c9;
+    --gray-4:#8a8a8a;
+    --paper:#fff;
+    --radius:6px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Georgia","Iowan Old Style",serif;
+    color:var(--ink);
+    background:#e9e9e9;
+    margin:0;
+    padding:24px 0 90px;
+    line-height:1.45;
+  }
+  .page{
+    width:210mm;
+    margin:0 auto 24px;
+    background:var(--paper);
+    padding:14mm 16mm 16mm;
+    box-shadow:0 0 14px rgba(0,0,0,.18);
+  }
+  h1{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:20pt;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    margin:0 0 2mm;
+    border-bottom:3px solid var(--ink);
+    padding-bottom:3mm;
+  }
+  .subtitle{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:9.5pt;
+    color:#444;
+    margin:0 0 8mm;
+  }
+  h2{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5pt;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    background:var(--ink);
+    color:#fff;
+    padding:2.2mm 4mm;
+    margin:9mm 0 4mm;
+    border-radius:3px;
+    break-after:avoid;
+  }
+  h2 small{
+    font-weight:400;
+    text-transform:none;
+    letter-spacing:0;
+    opacity:.75;
+    font-size:8.5pt;
+  }
+  h3{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5pt;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    margin:5mm 0 1.5mm;
+    color:#222;
+    border-bottom:1px solid var(--gray-3);
+    padding-bottom:1mm;
+    break-after:avoid;
+  }
+  .hint{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:8.3pt;
+    color:#666;
+    font-style:italic;
+    margin:0 0 2mm;
+  }
+  /* --- basic fields --- */
+  .grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0 6mm;}
+  .field{margin-bottom:3mm;}
+  .field label{
+    display:block;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:8.3pt;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:#555;
+    margin-bottom:.8mm;
+  }
+  input[type=text]{
+    width:100%;
+    border:none;
+    border-bottom:1.4px solid var(--ink);
+    font-family:inherit;
+    font-size:11pt;
+    padding:1.2mm 1mm;
+    background:transparent;
+  }
+  input[type=text]:focus{outline:none;background:var(--gray-1);}
+
+  .edit{
+    border:1.4px solid var(--gray-3);
+    border-radius:var(--radius);
+    padding:2.5mm 3mm;
+    min-height:9mm;
+    font-size:10.6pt;
+    background:#fff;
+  }
+  .edit:focus{outline:none;border-color:var(--ink);background:var(--gray-1);}
+  .edit.big{min-height:24mm;}
+  .edit:empty::before{content:attr(data-placeholder);color:#a3a3a3;font-style:italic;}
+
+  /* --- legend --- */
+  .legend{
+    display:flex;gap:5mm;flex-wrap:wrap;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:7.8pt;color:#444;
+    margin:2mm 0 1mm;
+    border:1px solid var(--gray-3);
+    border-radius:4px;
+    padding:2mm 3mm;
+    background:var(--gray-1);
+  }
+  .legend .item{display:flex;align-items:center;gap:1.6mm;}
+  .legend b{color:#111;}
+
+  /* --- checklist table --- */
+  table.checklist{width:100%;border-collapse:collapse;margin-top:2mm;}
+  table.checklist th{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:8pt;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    text-align:left;
+    border-bottom:2px solid var(--ink);
+    padding:1.5mm 2mm;
+    color:#444;
+  }
+  table.checklist th.optcol{text-align:center;width:24%;}
+  table.checklist th.notecol{width:26%;}
+  table.checklist td{
+    border-bottom:1px solid var(--gray-3);
+    padding:2.6mm 2mm;
+    vertical-align:middle;
+    font-size:9.8pt;
+  }
+  table.checklist td.question{width:50%;}
+  table.checklist td.optcell{text-align:center;width:24%;}
+  table.checklist td.notecell{width:26%;}
+
+  .check-group{display:flex;gap:1mm;justify-content:center;flex-wrap:nowrap;}
+
+  .note-input{
+    width:100%;
+    border:none;
+    border-bottom:1.2px solid var(--gray-4);
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:8.6pt;
+    padding:1mm .5mm;
+    background:transparent;
+  }
+  .note-input:focus{outline:none;border-color:var(--ink);background:var(--gray-1);}
+  .note-input::placeholder{color:#b3b3b3;font-style:italic;}
+
+  .check-btn{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:7.6pt;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:1mm;
+    padding:1.2mm 1.8mm;
+    border-radius:4px;
+    border:1.4px solid var(--gray-4);
+    background:#fff;
+    color:#333;
+    white-space:nowrap;
+  }
+  .check-btn .box{
+    width:3.6mm;height:3.6mm;
+    border:1.6px solid var(--ink);
+    border-radius:1.5px;
+    display:inline-block;
+    position:relative;
+    background:#fff;
+  }
+  .check-btn.selected{
+    border-color:var(--ink);
+    background:var(--gray-1);
+    font-weight:700;
+  }
+  .check-btn.selected .box{background:var(--ink);}
+  .check-btn.selected .box::after{
+    content:"";
+    position:absolute;
+    left:.8px;top:-.4px;
+    width:2mm;height:1.1mm;
+    border-left:1.6px solid #fff;
+    border-bottom:1.6px solid #fff;
+    transform:rotate(-45deg);
+  }
+
+  .callout{
+    border:1.6px solid var(--ink);
+    border-radius:var(--radius);
+    padding:3mm 4mm;
+    margin-top:2mm;
+    background:var(--gray-1);
+    font-size:10.2pt;
+  }
+  .callout b{display:block;font-family:"Helvetica Neue",Arial,sans-serif;font-size:8.3pt;text-transform:uppercase;letter-spacing:.03em;margin-bottom:1.2mm;color:#333;}
+
+  ul.escalate{margin:1mm 0 0;padding-left:5mm;font-size:10.2pt;}
+  ul.escalate li{margin-bottom:1mm;}
+
+  footer.note-box{
+    margin-top:5mm;
+    font-size:8.6pt;
+    color:#555;
+    border-left:3px solid var(--gray-3);
+    padding-left:3mm;
+  }
+
+  /* --- action bar --- */
+  .toolbar{
+    position:fixed;
+    left:0;right:0;bottom:0;
+    background:#1b1b1b;
+    padding:3mm 0;
+    display:flex;
+    justify-content:center;
+    gap:4mm;
+    z-index:50;
+    box-shadow:0 -2px 10px rgba(0,0,0,.3);
+  }
+  .toolbar button{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5pt;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    padding:3mm 9mm;
+    border-radius:4px;
+    border:none;
+    cursor:pointer;
+    font-weight:700;
+  }
+  #saveBtn{background:#fff;color:#111;}
+  #saveBtn:hover{background:#ddd;}
+  #printBtn{background:#e2b93b;color:#111;}
+  #printBtn:hover{background:#c9a12c;}
+  .toast{
+    position:fixed;
+    bottom:22mm;left:50%;
+    transform:translateX(-50%);
+    background:#111;color:#fff;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:9.5pt;
+    padding:2.5mm 6mm;
+    border-radius:4px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+    z-index:60;
+  }
+  .toast.show{opacity:1;}
+
+  @media print{
+    body{background:#fff;padding:0;margin:0;}
+    .page{box-shadow:none;width:auto;margin:0;padding:0;}
+    .no-print{display:none!important;}
+    h2{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#111!important;color:#fff!important;}
+    .legend{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .callout{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .check-btn:not(.selected){display:none!important;}
+    .check-btn.selected{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .edit{border-color:#555!important;}
+    .note-input{border-bottom-color:#555!important;}
+    .field,tr,table.checklist{break-inside:avoid;}
+    table.checklist thead{display:table-header-group;}
+    @page{size:A4;margin:12mm;}
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <h1>Čtvrtletní check-in třídního učitele</h1>
+  <p class="subtitle">Krátké pravidelné vyhodnocení situace ve třídě — vyplňte, uložte a v případě potřeby vytiskněte.</p>
+
+  <div class="grid-4">
+    <div class="field"><label>Třída</label><input type="text" id="f_trida"></div>
+    <div class="field"><label>Školní rok</label><input type="text" id="f_rok"></div>
+    <div class="field"><label>Čtvrtletí</label><input type="text" id="f_ctvrtleti"></div>
+    <div class="field"><label>Datum</label><input type="text" id="f_datum"></div>
+  </div>
+
+  <div class="legend">
+    <span class="item"><b>ANO</b> — objevilo se / je relevantní</span>
+    <span class="item"><b>NE</b> — nezaznamenáno</span>
+    <span class="item"><b>SLEDOVAT</b> — zatím bez závažného problému, ale existuje signál</span>
+  </div>
+
+  <table class="checklist">
+    <thead><tr><th>Otázka</th><th class="optcol">Odpověď</th><th class="notecol">Poznámka</th></tr></thead>
+    <tbody id="checklistBody"></tbody>
+  </table>
+
+  <h2>Nejdůležitější otázka čtvrtletí</h2>
+  <p class="hint">Je něco, co by měl vědět třídní učitel, školní metodik prevence, ŠPP nebo vedení školy?</p>
+  <div class="edit big" contenteditable="true" data-placeholder="Stručný popis, pokud ano…" id="f_nejdulezitejsi"></div>
+
+  <h2>Kdy je nutné informaci předat dále</h2>
+  <p class="hint">Třídní učitel předá informaci bez zbytečného odkladu, pokud:</p>
+  <ul class="escalate">
+    <li>se stejný problém opakuje,</li>
+    <li>začíná mít skupinový charakter,</li>
+    <li>týká se více žáků,</li>
+    <li>dochází k postupné eskalaci,</li>
+    <li>žák začíná být z kolektivu vytlačován,</li>
+    <li>objevují se projevy ponižování, agrese nebo násilí,</li>
+    <li>problém se přenáší do online prostředí,</li>
+    <li>situaci nelze účinně řešit pouze v rámci běžné práce třídního učitele,</li>
+    <li>má třídní učitel pochybnost, zda jde ještě o běžný konflikt, nebo již o závažnější problém.</li>
+  </ul>
+
+  <div class="callout">
+    <b>Zásada</b>
+    Nečekáme na jistotu, že jde o závažný problém. Předáváme informaci už ve chvíli, kdy se začíná rýsovat vzorec.
+  </div>
+
+  <footer class="note-box">Čtvrtletní check-in třídního učitele — interní dokument školy. Uchovávejte v souladu s pravidly ochrany osobních údajů.</footer>
+</div>
+
+<div class="toolbar no-print">
+  <button id="saveBtn" type="button">💾 Uložit</button>
+  <button id="printBtn" type="button">🖨 Tisk</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = "ctvrtletni_checkin_data_v1";
+
+const QUESTIONS = [
+  "Objevily se opakované konflikty mezi žáky?",
+  "Objevilo se zesměšňování nebo ponižování některého žáka?",
+  "Objevilo se vyčleňování některého žáka z kolektivu?",
+  "Objevily se problémy ve vztazích mezi chlapci a dívkami?",
+  "Objevily se projevy agrese nebo násilí?",
+  "Objevily se signály šikany či kyberšikany?",
+  "Objevily se problémy související se sociálními sítěmi?",
+  "Objevily se významné problémy s docházkou?",
+  "Je ve třídě žák vyžadující zvýšenou pozornost?",
+  "Byla v souvislosti s třídou kontaktována rodina žáka?",
+  "Bylo nutné zapojit ŠPP / vedení školy?"
+];
+
+const OPTIONS = ["ANO", "NE", "SLEDOVAT"];
+
+const checklistBody = document.getElementById("checklistBody");
+QUESTIONS.forEach((q, i) => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td class="question">${q}</td>
+    <td class="optcell">
+      <div class="check-group" data-row="${i}">
+        ${OPTIONS.map(o => `<button type="button" class="check-btn" data-opt="${o}"><span class="box"></span>${o}</button>`).join("")}
+      </div>
+    </td>
+    <td class="notecell"><input type="text" class="note-input" id="checklist_note_${i}" placeholder="poznámka…"></td>
+  `;
+  checklistBody.appendChild(tr);
+});
+
+document.querySelectorAll(".check-group").forEach(group => {
+  group.addEventListener("click", e => {
+    const btn = e.target.closest(".check-btn");
+    if (!btn) return;
+    const already = btn.classList.contains("selected");
+    group.querySelectorAll(".check-btn").forEach(b => b.classList.remove("selected"));
+    if (!already) btn.classList.add("selected");
+    autoSaveSoon();
+  });
+});
+
+function collectState() {
+  const state = {inputs:{}, edits:{}, checks:[], notes:{}};
+  document.querySelectorAll('input[type="text"]:not(.note-input)').forEach(el => state.inputs[el.id] = el.value);
+  document.querySelectorAll('.note-input').forEach(el => state.notes[el.id] = el.value);
+  document.querySelectorAll(".edit").forEach(el => { if (el.id) state.edits[el.id] = el.innerHTML; });
+  document.querySelectorAll(".check-group").forEach(g => {
+    const sel = g.querySelector(".check-btn.selected");
+    state.checks.push(sel ? sel.dataset.opt : null);
+  });
+  return state;
+}
+
+function applyState(state) {
+  if (!state) return;
+  Object.entries(state.inputs || {}).forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.value = val; });
+  Object.entries(state.notes || {}).forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.value = val; });
+  Object.entries(state.edits || {}).forEach(([id, html]) => { const el = document.getElementById(id); if (el) el.innerHTML = html; });
+  (state.checks || []).forEach((opt, i) => {
+    if (!opt) return;
+    const group = document.querySelector(`.check-group[data-row="${i}"]`);
+    if (!group) return;
+    const btn = group.querySelector(`.check-btn[data-opt="${opt}"]`);
+    if (btn) btn.classList.add("selected");
+  });
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) applyState(JSON.parse(raw));
+  } catch (e) {}
+}
+
+function showToast(msg) {
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.classList.remove("show"), 2200);
+}
+
+function saveState(silent) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
+  if (!silent) showToast("Uloženo do tohoto prohlížeče ✓");
+}
+
+let autoSaveTimer = null;
+function autoSaveSoon() {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => saveState(true), 800);
+}
+
+document.addEventListener("input", e => {
+  if (e.target.classList && (e.target.classList.contains("edit") || e.target.tagName === "INPUT")) autoSaveSoon();
+});
+
+document.getElementById("saveBtn").addEventListener("click", () => saveState(false));
+document.getElementById("printBtn").addEventListener("click", () => { saveState(true); window.print(); });
+
+loadState();
+</script>
+
+</body>
+</html>
