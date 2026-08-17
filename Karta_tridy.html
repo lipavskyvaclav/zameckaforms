@@ -115,29 +115,6 @@
   .edit.big{min-height:20mm;}
   .edit:empty::before{content:attr(data-placeholder);color:#a3a3a3;font-style:italic;}
 
-  /* --- suggestion chips --- */
-  .chips{
-    display:flex;
-    flex-wrap:wrap;
-    gap:1.6mm;
-    margin-bottom:2mm;
-  }
-  .chip{
-    font-family:"Helvetica Neue",Arial,sans-serif;
-    font-size:8.1pt;
-    line-height:1.25;
-    background:var(--gray-1);
-    border:1px solid var(--gray-3);
-    border-radius:20px;
-    padding:1.6mm 3mm;
-    cursor:pointer;
-    color:#333;
-    max-width:100%;
-  }
-  .chip:hover{background:var(--gray-2);border-color:var(--gray-4);}
-  .chip:before{content:"+ ";color:var(--gray-4);}
-  .chip.used{opacity:.4;text-decoration:line-through;}
-
   /* --- climate table --- */
   table.climate{width:100%;border-collapse:collapse;margin-top:2mm;}
   table.climate th{
@@ -349,33 +326,9 @@
   <h2>Charakteristika třídy</h2>
 
   <h3>Silné stránky třídy</h3>
-  <p class="hint no-print">Klikněte na větu, kterou chcete použít — vloží se do pole níže. Vybrané věty se vytisknou, samotné návrhy ne.</p>
-  <div class="chips no-print" id="chips_silne">
-    <span class="chip">Žáci projevují vysokou míru tolerance vůči specifickým potřebám a odlišnostem spolužáků.</span>
-    <span class="chip">Třída má silný smysl pro spravedlnost a neváhá se zastat znevýhodněných.</span>
-    <span class="chip">Žáci dokážou otevřeně komunikovat i o náročnějších problémech.</span>
-    <span class="chip">Většina žáků je schopna sebereflexe a umí konstruktivně přijmout kritiku.</span>
-    <span class="chip">Neformální lídři působí na zbytek skupiny pozitivním a motivujícím vlivem.</span>
-    <span class="chip">Třída je proaktivní a často sama iniciuje smysluplné nápady či aktivity.</span>
-    <span class="chip">Kolektiv sdílí zdravý smysl pro humor bez tendencí k posměchu či šikaně.</span>
-    <span class="chip">Třída projevuje přirozenou zvídavost i nad rámec povinně probíraného učiva.</span>
-    <span class="chip">Třídní kolektiv je soudržný a integruje všechny žáky bez vyčleňování.</span>
-  </div>
   <div class="edit big" contenteditable="true" data-placeholder="Silné stránky třídy…" id="f_silne_stranky"></div>
 
   <h3>Co ve třídě dobře funguje (zavedené rutiny)</h3>
-  <p class="hint no-print">Klikněte na větu, kterou chcete použít — vloží se do pole níže.</p>
-  <div class="chips no-print" id="chips_funguje">
-    <span class="chip">Třída spolehlivě dodržuje nastavená pravidla pro používání mobilních telefonů.</span>
-    <span class="chip">Žáci si umí při skupinové práci samostatně a efektivně rozdělit dílčí role.</span>
-    <span class="chip">Třídní služby plní své úkoly zcela automaticky a bez nutnosti připomínání.</span>
-    <span class="chip">Třída rychle a spolehlivě reaguje na zavedené signály učitele pro zklidnění.</span>
-    <span class="chip">Většina žáků má před začátkem hodiny včas připravené pomůcky a je ztišená.</span>
-    <span class="chip">Ve třídě výborně funguje systém vzájemné pomoci a sdílení materiálů po absenci.</span>
-    <span class="chip">Třída dodržuje pravidla třídy, které si sama stanovila. Při porušení je schopna sebereflexe.</span>
-    <span class="chip">Žáci si dokážou samostatně vyřešit drobné neshody bez nutnosti zásahu pedagoga.</span>
-    <span class="chip">Žáci soustavně udržují pořádek ve své kmenové učebně.</span>
-  </div>
   <div class="edit big" contenteditable="true" data-placeholder="Co ve třídě dobře funguje…" id="f_funguje"></div>
 
   <h3>Aktuální charakteristika třídy <small style="text-transform:none;font-weight:400;">(stručně, přibližně 3–5 vět)</small></h3>
@@ -506,25 +459,6 @@ document.querySelectorAll(".status-group").forEach(group => {
     group.querySelectorAll(".status-btn").forEach(b => b.classList.remove("selected"));
     if (!already) btn.classList.add("selected");
     autoSaveSoon();
-  });
-});
-
-// --- chip -> textbox insertion ---
-document.querySelectorAll(".chips").forEach(chipBox => {
-  const targetId = chipBox.id === "chips_silne" ? "f_silne_stranky" : "f_funguje";
-  const target = document.getElementById(targetId);
-  chipBox.querySelectorAll(".chip").forEach(chip => {
-    chip.addEventListener("click", () => {
-      const text = chip.textContent.trim();
-      if (target.dataset.used && target.dataset.used.includes(text)) return;
-      const line = document.createElement("div");
-      line.textContent = "• " + text;
-      target.appendChild(line);
-      target.dataset.used = (target.dataset.used || "") + "||" + text;
-      chip.classList.add("used");
-      target.focus();
-      autoSaveSoon();
-    });
   });
 });
 
