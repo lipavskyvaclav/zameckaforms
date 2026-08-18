@@ -535,7 +535,32 @@ function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) { applyState(JSON.parse(raw)); return; }
   } catch (e) {}
-  addConflictRow();
+  hydrateBakedConflictRows();
+  if (!conflictList.querySelector(".conflict-row")) addConflictRow();
+}
+
+// Attaches working listeners to conflict rows that were baked directly into
+// the page markup (e.g. when reopening a file previously exported via "Uložit"),
+// since those rows were not created through addConflictRow() and so have no
+// JS listeners yet. Also keeps the id counter from colliding with them.
+function hydrateBakedConflictRows() {
+  let maxId = -1;
+  conflictList.querySelectorAll(".conflict-row").forEach(row => {
+    const removeBtn = row.querySelector(".conflict-remove");
+    if (removeBtn && !removeBtn.dataset.bound) {
+      removeBtn.addEventListener("click", () => { row.remove(); autoSaveSoon(); });
+      removeBtn.dataset.bound = "1";
+    }
+    row.querySelectorAll(".conflict-side").forEach(el => {
+      if (!el.dataset.bound) {
+        el.addEventListener("input", autoSaveSoon);
+        el.dataset.bound = "1";
+      }
+    });
+    const idNum = parseInt(row.dataset.id, 10);
+    if (!isNaN(idNum) && idNum > maxId) maxId = idNum;
+  });
+  if (maxId + 1 > conflictCount) conflictCount = maxId + 1;
 }
 
 function showToast(msg) {
@@ -546,6 +571,8 @@ function showToast(msg) {
   showToast._t = setTimeout(() => toast.classList.remove("show"), 2200);
 }
 
+// Silent background autosave to this browser's local storage — a safety net,
+// not the explicit "Uložit" action.
 function saveState(silent) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
   if (!silent) showToast("Uloženo do tohoto prohlížeče ✓");
@@ -561,8 +588,58 @@ document.addEventListener("input", e => {
   if (e.target.classList && (e.target.classList.contains("edit") || e.target.tagName === "INPUT")) autoSaveSoon();
 });
 
-document.getElementById("saveBtn").addEventListener("click", () => saveState(false));
+// --- explicit "Uložit" = real file save, with a native save dialog when the browser supports it ---
+function buildExportFilename() {
+  const trida = (document.getElementById("f_trida").value || "").trim();
+  const safe = trida.replace(/[^\p{L}\p{N}]+/gu, "_").replace(/^_+|_+$/g, "");
+  return "Karta_tridy" + (safe ? "_" + safe : "") + ".html";
+}
+
+async function exportToFile() {
+  // bake current values into the DOM's attributes/content so the serialized
+  // HTML re-opens pre-filled, without needing localStorage on the new machine
+  document.querySelectorAll('input[type="text"]').forEach(el => el.setAttribute("value", el.value));
+
+  const filename = buildExportFilename();
+  const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+
+  if (window.showSaveFilePicker) {
+    try {
+      const pickerPromise = window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: "HTML soubor", accept: { "text/html": [".html"] } }]
+      });
+      // guard against environments where the picker silently never resolves
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("picker_timeout")), 6000));
+      const handle = await Promise.race([pickerPromise, timeoutPromise]);
+      const writable = await handle.createWritable();
+      await writable.write(htmlContent);
+      await writable.close();
+      showToast("Soubor uložen ✓");
+      return;
+    } catch (err) {
+      if (err && err.name === "AbortError") return; // user cancelled the dialog
+      // otherwise (unsupported / timed out / failed) fall through to the plain download below
+    }
+  }
+
+  // fallback for browsers without the native save dialog (e.g. Firefox, Safari):
+  // triggers a normal browser download of the same file
+  const blob = new Blob([htmlContent], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast("Soubor stažen ✓ (zkontrolujte složku Stažené soubory)");
+}
+
+document.getElementById("saveBtn").addEventListener("click", () => { saveState(true); exportToFile(); });
 document.getElementById("printBtn").addEventListener("click", () => { saveState(true); window.print(); });
+
 
 loadState();
 </script>

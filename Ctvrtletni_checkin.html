@@ -429,6 +429,8 @@ function showToast(msg) {
   showToast._t = setTimeout(() => toast.classList.remove("show"), 2200);
 }
 
+// Silent background autosave to this browser's local storage — a safety net,
+// not the explicit "Uložit" action.
 function saveState(silent) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
   if (!silent) showToast("Uloženo do tohoto prohlížeče ✓");
@@ -444,7 +446,58 @@ document.addEventListener("input", e => {
   if (e.target.classList && (e.target.classList.contains("edit") || e.target.tagName === "INPUT")) autoSaveSoon();
 });
 
-document.getElementById("saveBtn").addEventListener("click", () => saveState(false));
+// --- explicit "Uložit" = real file save, with a native save dialog when the browser supports it ---
+function buildExportFilename() {
+  const trida = (document.getElementById("f_trida").value || "").trim();
+  const ctvrtleti = (document.getElementById("f_ctvrtleti").value || "").trim();
+  const parts = [trida, ctvrtleti].filter(Boolean).join("_").replace(/[^\p{L}\p{N}]+/gu, "_").replace(/^_+|_+$/g, "");
+  return "Ctvrtletni_checkin" + (parts ? "_" + parts : "") + ".html";
+}
+
+async function exportToFile() {
+  // bake current values into the DOM's attributes/content so the serialized
+  // HTML re-opens pre-filled, without needing localStorage on the new machine
+  document.querySelectorAll('input[type="text"]:not(.note-input)').forEach(el => el.setAttribute("value", el.value));
+  document.querySelectorAll('.note-input').forEach(el => el.setAttribute("value", el.value));
+
+  const filename = buildExportFilename();
+  const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+
+  if (window.showSaveFilePicker) {
+    try {
+      const pickerPromise = window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: "HTML soubor", accept: { "text/html": [".html"] } }]
+      });
+      // guard against environments where the picker silently never resolves
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("picker_timeout")), 6000));
+      const handle = await Promise.race([pickerPromise, timeoutPromise]);
+      const writable = await handle.createWritable();
+      await writable.write(htmlContent);
+      await writable.close();
+      showToast("Soubor uložen ✓");
+      return;
+    } catch (err) {
+      if (err && err.name === "AbortError") return; // user cancelled the dialog
+      // otherwise (unsupported / timed out / failed) fall through to the plain download below
+    }
+  }
+
+  // fallback for browsers without the native save dialog (e.g. Firefox, Safari):
+  // triggers a normal browser download of the same file
+  const blob = new Blob([htmlContent], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast("Soubor stažen ✓ (zkontrolujte složku Stažené soubory)");
+}
+
+document.getElementById("saveBtn").addEventListener("click", () => { saveState(true); exportToFile(); });
 document.getElementById("printBtn").addEventListener("click", () => { saveState(true); window.print(); });
 
 loadState();
