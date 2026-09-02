@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Kontrolní jednání se zákonným zástupcem a žákem</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: "Calibri", "Segoe UI", Arial, sans-serif;
+    font-size: 11pt;
+    color: #000;
+    margin: 0;
+    background: #e8e8e8;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 10mm auto;
+    background: #fff;
+    padding: 15mm 18mm;
+    box-shadow: 0 0 8px rgba(0,0,0,0.25);
+  }
+
+  @page { size: A4; margin: 15mm 18mm; }
+
+  @media print {
+    body { background: #fff; }
+    .page {
+      width: auto;
+      min-height: auto;
+      margin: 0;
+      padding: 0;
+      box-shadow: none;
+    }
+    .no-print { display: none !important; }
+    input, textarea { border-color: #000 !important; }
+  }
+
+  .no-print {
+    max-width: 210mm;
+    margin: 6mm auto;
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+    color: #444;
+    background: #fff8dc;
+    border: 1px solid #d8c273;
+    padding: 8px 14px;
+    border-radius: 4px;
+  }
+
+  input, textarea {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+  }
+
+  h1.title {
+    font-size: 13pt;
+    margin: 0 0 8mm 0;
+  }
+
+  .title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .title-row label {
+    font-weight: bold;
+    font-size: 13pt;
+  }
+
+  input.date-inline {
+    border: none;
+    border-bottom: 1px solid #000;
+    background: transparent;
+    font-size: 11pt;
+    padding: 1px 4px;
+    min-width: 55mm;
+  }
+
+  input.date-inline:focus {
+    outline: none;
+    background: #fffbe0;
+  }
+
+  h2.section {
+    font-size: 11pt;
+    margin: 6mm 0 2mm 0;
+  }
+
+  /* ---- open text boxes ---- */
+  textarea.answer-box {
+    border: 1px solid #000;
+    width: 100%;
+    display: block;
+    resize: none;
+    overflow: hidden;
+    padding: 6px 8px;
+    line-height: 1.4;
+  }
+
+  textarea.answer-box.large { min-height: 2.5cm; }
+
+  textarea.answer-box:focus {
+    outline: none;
+    background: #fffbe0;
+  }
+
+  input.date-input {
+    border: 1px solid #000;
+    background: #d9d9d9;
+    width: 100%;
+    padding: 5px 8px;
+    height: 1.4cm;
+  }
+
+  /* ---- signatures table ---- */
+  table.signatures {
+    width: 100%;
+    border-collapse: collapse;
+    page-break-inside: avoid;
+  }
+
+  table.signatures th, table.signatures td {
+    border: 1px solid #000;
+    padding: 3px 6px;
+    height: 9mm;
+  }
+
+  table.signatures th {
+    background: #d9d9d9;
+    text-align: left;
+  }
+
+  table.signatures input {
+    border: none;
+    background: transparent;
+    width: 100%;
+    padding: 2px;
+  }
+
+  table.signatures input:focus {
+    outline: none;
+    background: #fffbe0;
+  }
+
+  .section-block {
+    page-break-inside: avoid;
+    margin-bottom: 6mm;
+  }
+
+  .add-row-btn {
+    margin-top: 3mm;
+    font-family: Arial, sans-serif;
+    font-size: 9.5pt;
+    padding: 4px 10px;
+    cursor: pointer;
+    border: 1px solid #666;
+    background: #f0f0f0;
+    border-radius: 3px;
+  }
+
+  .add-row-btn:hover { background: #e0e0e0; }
+
+  /* ---- bottom action buttons ---- */
+  .actions {
+    max-width: 210mm;
+    margin: 6mm auto 14mm auto;
+    display: flex;
+    justify-content: center;
+    gap: 10mm;
+  }
+
+  .actions button {
+    font-family: Arial, sans-serif;
+    font-size: 12pt;
+    padding: 8px 24px;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 1px solid #555;
+  }
+
+  #saveBtn { background: #eef3ff; }
+  #saveBtn:hover { background: #dce8ff; }
+  #printBtn { background: #eaffea; }
+  #printBtn:hover { background: #d5ffd5; }
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  Tisknutelný a vyplnitelný formulář. Žlutý rámeček se při tisku nezobrazí.
+</div>
+
+<div class="page" id="formPage">
+
+  <div class="title-row">
+    <label>Kontrolní setkání</label>
+    <span>konané dne:</span>
+    <input type="date" class="date-inline">
+  </div>
+
+  <div class="section-block">
+    <h2 class="section">Zhodnocení dosavadního vývoje:</h2>
+    <textarea class="answer-box large" rows="1"></textarea>
+  </div>
+
+  <div class="section-block">
+    <h2 class="section">Popis výsledku jednání, další postup:</h2>
+    <textarea class="answer-box large" rows="1"></textarea>
+  </div>
+
+  <div class="section-block">
+    <h2 class="section">Termín kontrolního setkání:</h2>
+    <input type="date" class="date-input">
+  </div>
+
+  <div class="section-block">
+    <h2 class="section">Podpisy zúčastněných:</h2>
+    <table class="signatures" id="sigTable">
+      <tr><th>Pozice</th><th>Jméno</th><th>Podpis</th></tr>
+      <tr>
+        <td><input type="text" value="žákyně/ žák"></td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+      </tr>
+      <tr>
+        <td><input type="text" value="zákonný zástupce žákyně/žáka"></td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+      </tr>
+      <tr>
+        <td><input type="text" value="zákonný zástupce žákyně/žáka"></td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+      </tr>
+      <tr>
+        <td><input type="text" value="za školu:"></td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+      </tr>
+    </table>
+    <button type="button" class="add-row-btn no-print" onclick="addSignatureRow()">+ Přidat řádek</button>
+  </div>
+
+</div>
+
+<div class="actions no-print">
+  <button id="saveBtn" type="button" onclick="saveDocument()">💾 Uložit</button>
+  <button id="printBtn" type="button" onclick="window.print()">🖨️ Tisk</button>
+</div>
+
+<script>
+  // Auto-growing textareas
+  function autoGrow(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }
+  document.querySelectorAll('textarea.answer-box').forEach(function(ta) {
+    autoGrow(ta);
+    ta.addEventListener('input', function() { autoGrow(ta); });
+  });
+
+  // Add a new blank row to the signatures table
+  function addSignatureRow() {
+    var table = document.getElementById('sigTable');
+    var row = table.insertRow(-1);
+    for (var i = 0; i < 3; i++) {
+      var cell = row.insertCell(i);
+      var input = document.createElement('input');
+      input.type = 'text';
+      cell.appendChild(input);
+    }
+  }
+
+  // Save current state of the form as a standalone HTML file
+  async function saveDocument() {
+    var clone = document.documentElement.cloneNode(true);
+
+    var liveInputs = document.querySelectorAll('input, textarea');
+    var cloneInputs = clone.querySelectorAll('input, textarea');
+    liveInputs.forEach(function(live, i) {
+      var c = cloneInputs[i];
+      if (!c) return;
+      if (live.type === 'checkbox') {
+        if (live.checked) c.setAttribute('checked', 'checked');
+        else c.removeAttribute('checked');
+      } else if (live.tagName === 'TEXTAREA') {
+        c.textContent = live.value;
+      } else {
+        c.setAttribute('value', live.value);
+      }
+    });
+
+    var htmlContent = '<!DOCTYPE html>\n' + clone.outerHTML;
+    var blob = new Blob([htmlContent], { type: 'text/html' });
+
+    if (window.showSaveFilePicker) {
+      try {
+        var handle = await window.showSaveFilePicker({
+          suggestedName: 'kontrolni_jednani_zakonny_zastupce.html',
+          types: [{ description: 'HTML dokument', accept: { 'text/html': ['.html'] } }]
+        });
+        var writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+      }
+    }
+
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'kontrolni_jednani_zakonny_zastupce.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+</script>
+
+</body>
+</html>
