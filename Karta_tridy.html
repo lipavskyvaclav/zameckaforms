@@ -605,13 +605,15 @@ async function exportToFile() {
 
   if (window.showSaveFilePicker) {
     try {
-      const pickerPromise = window.showSaveFilePicker({
+      // Žádný umělý timeout: dialog čeká, až uživatel vybere složku/název,
+      // což může snadno trvat déle než pár sekund. Původní 6s timeout
+      // dokázal "vypršet", zatímco dialog byl ještě otevřený — kód pak
+      // navíc spustil i záložní stažení níže, což způsobovalo dvojitý
+      // dialog "Uložit jako" / dvojí uložení.
+      const handle = await window.showSaveFilePicker({
         suggestedName: filename,
         types: [{ description: "HTML soubor", accept: { "text/html": [".html"] } }]
       });
-      // guard against environments where the picker silently never resolves
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("picker_timeout")), 6000));
-      const handle = await Promise.race([pickerPromise, timeoutPromise]);
       const writable = await handle.createWritable();
       await writable.write(htmlContent);
       await writable.close();
@@ -619,7 +621,7 @@ async function exportToFile() {
       return;
     } catch (err) {
       if (err && err.name === "AbortError") return; // user cancelled the dialog
-      // otherwise (unsupported / timed out / failed) fall through to the plain download below
+      // otherwise (unsupported / permission denied / failed) fall through to the plain download below
     }
   }
 
@@ -633,7 +635,13 @@ async function exportToFile() {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  // Okamžité zrušení object URL umělo dokument "useknout": pokud Windows
+  // zobrazí vlastní dialog Uložit jako pro stahovaný soubor, prohlížeč
+  // začne obsah blobu skutečně číst až po výběru umístění — což může být
+  // později, než se provede tento řádek. Předčasné revokeObjectURL pak
+  // ořízlo soubor na to, co se stihlo přečíst do té doby (proto se uložila
+  // jen "první polovina"). Dáme prohlížeči čas obsah dočíst.
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
   showToast("Soubor stažen ✓ (zkontrolujte složku Stažené soubory)");
 }
 
