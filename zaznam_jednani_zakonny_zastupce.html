@@ -560,7 +560,13 @@
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Okamžité zrušení object URL umělo dokument "useknout": pokud Windows
+    // zobrazí vlastní dialog Uložit jako pro stahovaný soubor, prohlížeč
+    // začne obsah blobu skutečně číst až po výběru umístění — což může být
+    // později, než se provede tento řádek. Předčasné revokeObjectURL pak
+    // ořízlo soubor na to, co se stihlo přečíst do té doby. Dáme
+    // prohlížeči čas obsah dočíst.
+    setTimeout(function() { URL.revokeObjectURL(url); }, 2000);
   }
 </script>
 
