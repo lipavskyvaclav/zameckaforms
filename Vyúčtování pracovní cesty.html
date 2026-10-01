@@ -289,7 +289,7 @@
             <thead>
                 <tr>
                     <th style="width:30px;">Ozn.<br>dokl.</th>
-                    <th style="width:22%">Od / Do<br><small>(datum, čas)</small></th>
+                    <th style="width:30%">Od / Do &nbsp;·&nbsp; Odkud / Kam<br><small>(datum, čas, místo)</small></th>
                     <th>Dopravní prostředek / Popis</th>
                     <th style="width:18%">Druh výdaje</th>
                     <th style="width:130px;">Částka</th>
@@ -373,34 +373,10 @@
 
     <hr class="thick">
     <div class="section yellow">
-        <div class="section-title">Vyúčtování pracovní cesty</div>
-        <div class="field-row">
-            <div class="field wide">
-                <label>Zpráva o výsledku pracovní cesty byla podána dne:</label>
-                <input type="text" id="zprava-datum">
-            </div>
-            <div class="field wide">
-                <label>Se způsobem provedení souhlasí:</label>
-                <input type="text" id="souhlas">
-            </div>
-            <div class="field wide">
-                <label>Datum a podpis odpovědného pracovníka:</label>
-                <input type="text" id="zprava-podpis">
-            </div>
-        </div>
-
         <div class="podpis-box">
-            <div class="podpis-field">
+            <div class="podpis-field" style="max-width:260px;">
                 <div class="podpis-line" style="background:#e8e3b8;"></div>
-                <div class="podpis-label">Datum a podpis pracovníka,<br>který upravil vyúčtování</div>
-            </div>
-            <div class="podpis-field">
-                <div class="podpis-line" style="background:#e8e3b8;"></div>
-                <div class="podpis-label">Datum a podpis účtovatele 👈<br>(průkaz totožnosti)</div>
-            </div>
-            <div class="podpis-field">
-                <div class="razitko">razítko</div>
-                <div class="podpis-label" style="text-align:center; margin-top:3px;">Datum a podpis pokladníka</div>
+                <div class="podpis-label">Datum a podpis účtovatele</div>
             </div>
         </div>
     </div>
@@ -510,10 +486,12 @@ function renderRows() {
                     <div class="dt-row"><span>Od:</span>
                         <input type="date" value="${formatForDateInput(row.datum_od)}" style="width:105px;" oninput="saveRowVal(${row.id},'datum_od',this.value); recalc()">
                         <input type="time" value="${row.cas_od||''}" oninput="saveRowVal(${row.id},'cas_od',this.value); recalc()">
+                        <input type="text" placeholder="Odkud" value="${escHtml(row.odkud||'')}" style="width:90px;" oninput="saveRowVal(${row.id},'odkud',this.value)">
                     </div>
                     <div class="dt-row"><span>Do:</span>
                         <input type="date" value="${formatForDateInput(row.datum_do)}" style="width:105px;" oninput="saveRowVal(${row.id},'datum_do',this.value); recalc()">
                         <input type="time" value="${row.cas_do||''}" oninput="saveRowVal(${row.id},'cas_do',this.value); recalc()">
+                        <input type="text" placeholder="Kam" value="${escHtml(row.kam||'')}" style="width:90px;" oninput="saveRowVal(${row.id},'kam',this.value)">
                     </div>
                 </div>
             </td>
@@ -533,6 +511,10 @@ function renderRows() {
     });
 
     recalc();
+}
+
+function escHtml(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 }
 
 function saveRowVal(id, key, val) {
