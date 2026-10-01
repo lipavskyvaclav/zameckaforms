@@ -520,8 +520,17 @@
                     <input type="text" id="pojistka-povinne">
                 </div>
                 <div class="field wide">
-                    <label>Číslo havarijního pojištění:</label>
-                    <input type="text" id="pojistka-havarijni">
+                    <label>Havarijní pojištění:</label>
+                    <div style="display:flex; align-items:center; gap:14px; padding:3px 0;">
+                        <label style="display:flex; align-items:center; gap:4px; font-size:11px; font-weight:400; color:#111; cursor:pointer;">
+                            <input type="radio" name="havarijni" id="havarijni-ano" value="ano" style="width:auto; border:none; accent-color:#4a7c59;">
+                            Ano
+                        </label>
+                        <label style="display:flex; align-items:center; gap:4px; font-size:11px; font-weight:400; color:#111; cursor:pointer;">
+                            <input type="radio" name="havarijni" id="havarijni-ne" value="ne" style="width:auto; border:none; accent-color:#4a7c59;">
+                            Ne
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -683,6 +692,7 @@
             if (!keepIds.includes(el.id)) el.value = '';
         });
         document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        document.querySelectorAll('input[type="radio"]').forEach(r => { r.checked = false; r.removeAttribute('checked'); });
         document.getElementById('vozidlo-section').style.display = 'none';
     }
 
@@ -694,6 +704,10 @@
             el.textContent = el.value;
         });
         document.querySelectorAll('input[type="checkbox"]').forEach(el => {
+            if (el.checked) el.setAttribute('checked', 'checked');
+            else el.removeAttribute('checked');
+        });
+        document.querySelectorAll('input[type="radio"]').forEach(el => {
             if (el.checked) el.setAttribute('checked', 'checked');
             else el.removeAttribute('checked');
         });
