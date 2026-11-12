@@ -132,6 +132,8 @@
             overflow: hidden;
         }
 
+        .no-print { display: inline; }
+
         /* Tabulka cest */
         .trip-table {
             width: 100%;
@@ -250,6 +252,33 @@
             text-align: center;
         }
 
+        /* Dvojice: datum (formulář) + podpis (prázdné místo) */
+        .podpis-pair {
+            flex-direction: row;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .podpis-datum {
+            flex: 0 0 105px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .podpis-podpis {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .podpis-datum input[type="date"] {
+            min-height: 26px;
+            margin-bottom: 3px;
+            text-align: center;
+        }
+
         /* Poznámka */
         #poznamka {
             min-height: 24px;
@@ -363,6 +392,9 @@
             }
             .trip-table td input { border-bottom: 1px solid #999 !important; }
             .trip-table td textarea { border-bottom: none !important; }
+            .no-print { display: none !important; }
+            input[type="date"]::-webkit-calendar-picker-indicator,
+            input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
             @page { size: A4; margin: 6mm 8mm; }
         }
     </style>
@@ -523,11 +555,11 @@
                     <label>Havarijní pojištění:</label>
                     <div style="display:flex; align-items:center; gap:14px; padding:3px 0;">
                         <label style="display:flex; align-items:center; gap:4px; font-size:11px; font-weight:400; color:#111; cursor:pointer;">
-                            <input type="radio" name="havarijni" id="havarijni-ano" value="ano" style="width:auto; border:none; accent-color:#4a7c59;">
+                            <input type="radio" name="havarijni" id="havarijni-ano" value="ano" onchange="updateProhlaseni()" style="width:auto; border:none; accent-color:#4a7c59;">
                             Ano
                         </label>
                         <label style="display:flex; align-items:center; gap:4px; font-size:11px; font-weight:400; color:#111; cursor:pointer;">
-                            <input type="radio" name="havarijni" id="havarijni-ne" value="ne" style="width:auto; border:none; accent-color:#4a7c59;">
+                            <input type="radio" name="havarijni" id="havarijni-ne" value="ne" onchange="updateProhlaseni()" style="width:auto; border:none; accent-color:#4a7c59;">
                             Ne
                         </label>
                     </div>
@@ -535,17 +567,23 @@
             </div>
 
             <div class="prohlaseni">
-                Případné škody vzniklé na osobním vozidle během pracovní cesty budou kryty havarijní pojistkou a vůči Základní škole Litomyšl, Zámecká 496, okres Svitavy nebudu vznášet žádné požadavky na úhradu případné škody.
+                <span id="prohlaseni-text">Případné škody vzniklé na osobním vozidle během pracovní cesty budou kryty havarijní pojistkou a vůči Základní škole Litomyšl, Zámecká 496, okres Svitavy nebudu vznášet žádné požadavky na úhradu případné škody.</span>
             </div>
 
             <div style="font-size:9px; font-weight:600; color:#2d5a2d; background:#eaf2ea; border-left:3px solid #4a7c59; padding:4px 6px; margin:4px 0;">
-                Dle vzájemné dohody bude použito soukromého vozidla dle platného jízdného veřejným dopravním prostředkem.
+                Dle vzájemné dohody bude za použití soukromého vozidla poskytnuta náhrada ve výši platného jízdného veřejným dopravním prostředkem.
             </div>
 
             <div class="podpis-box" style="margin-top:6px;">
-                <div class="podpis-field">
-                    <div class="podpis-line"></div>
-                    <div class="podpis-label">Datum a podpis žadatele</div>
+                <div class="podpis-field podpis-pair">
+                    <div class="podpis-datum">
+                        <input type="date" id="zadatel-datum">
+                        <div class="podpis-label">Datum</div>
+                    </div>
+                    <div class="podpis-podpis">
+                        <div class="podpis-line"></div>
+                        <div class="podpis-label">Podpis žadatele</div>
+                    </div>
                 </div>
                 <div class="podpis-field">
                     <div class="podpis-line"></div>
@@ -575,7 +613,7 @@
         <div class="podpis-box" style="margin-top:6px;">
             <div class="podpis-field">
                 <div class="podpis-line" style="background:#e8e3b8;"></div>
-                <div class="podpis-label">Souhlas pracovníka s vysláním na služební cestu 👈</div>
+                <div class="podpis-label">Souhlas pracovníka s vysláním na služební cestu<span class="no-print"> 👈</span></div>
             </div>
             <div class="podpis-field">
                 <div class="podpis-line" style="background:#e8e3b8;"></div>
@@ -648,9 +686,15 @@
                 <div class="podpis-line" style="background:#e8e3b8;"></div>
                 <div class="podpis-label">Datum a podpis pracovníka,<br>který upravil vyúčtování</div>
             </div>
-            <div class="podpis-field">
-                <div class="podpis-line" style="background:#e8e3b8;"></div>
-                <div class="podpis-label">Datum a podpis příjemce 👈<br>(průkaz totožnosti)</div>
+            <div class="podpis-field podpis-pair" style="flex: 2;">
+                <div class="podpis-datum">
+                    <input type="date" id="prijemce-datum">
+                    <div class="podpis-label" style="min-height:2.4em;">Datum</div>
+                </div>
+                <div class="podpis-podpis">
+                    <div class="podpis-line" style="background:#e8e3b8;"></div>
+                    <div class="podpis-label">Podpis příjemce<span class="no-print"> 👈</span><br>(průkaz totožnosti)</div>
+                </div>
             </div>
             <div class="podpis-field">
                 <div class="podpis-line" style="background:#e8e3b8;"></div>
@@ -684,6 +728,28 @@
         document.getElementById('vozidlo-section').style.display = checked ? 'block' : 'none';
     }
 
+    const PROHLASENI_ANO = 'Případné škody vzniklé na osobním vozidle během pracovní cesty budou kryty havarijní pojistkou a vůči Základní škole Litomyšl, Zámecká 496, okres Svitavy nebudu vznášet žádné požadavky na úhradu případné škody.';
+    const PROHLASENI_NE = 'Vozidlo není havarijně pojištěno. Případné škody vzniklé na osobním vozidle během pracovní cesty hradím na vlastní náklady a vůči Základní škole Litomyšl, Zámecká 496, okres Svitavy nebudu vznášet žádné požadavky na úhradu případné škody.';
+
+    function updateProhlaseni() {
+        const ne = document.getElementById('havarijni-ne').checked;
+        document.getElementById('prohlaseni-text').textContent = ne ? PROHLASENI_NE : PROHLASENI_ANO;
+    }
+
+    function autosize(el) {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+    }
+
+    function autosizeAll() {
+        document.querySelectorAll('textarea').forEach(autosize);
+    }
+
+    document.querySelectorAll('textarea').forEach(el => el.addEventListener('input', () => autosize(el)));
+    window.addEventListener('load', autosizeAll);
+    window.addEventListener('resize', autosizeAll);
+    window.addEventListener('beforeprint', autosizeAll);
+
     const keepIds = ['jmeno','bydliste','utvar','oscislo','prac-od','prac-do'];
 
     function newDocument() {
@@ -694,6 +760,8 @@
         document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
         document.querySelectorAll('input[type="radio"]').forEach(r => { r.checked = false; r.removeAttribute('checked'); });
         document.getElementById('vozidlo-section').style.display = 'none';
+        updateProhlaseni();
+        autosizeAll();
     }
 
     function saveForm() {
@@ -712,14 +780,11 @@
             else el.removeAttribute('checked');
         });
 
-        const vozidloVisible = document.getElementById('vozidlo-section').style.display !== 'none';
         const jmeno = document.getElementById('jmeno').value;
         const filename = 'cestovni-prikaz-' + (jmeno ? jmeno.replace(/[^a-z0-9áčďéěíňóřšťúůýž]/gi, '-').toLowerCase() : 'formular') + '.html';
 
-        let html = document.documentElement.outerHTML;
-        html = html.replace(/<!--RESTORE-->[\s\S]*?<!--\/RESTORE-->/g, '');
-        const restoreScript = `<!--RESTORE--><script>window.addEventListener('load',function(){var v=document.getElementById('vozidlo-section');if(v)v.style.display='${vozidloVisible?"block":"none"}';});<\/script><!--/RESTORE-->`;
-        html = html.replace('</body>', restoreScript + '</body>');
+        // Stav sekce vozidla se uloží sám (inline style), není potřeba žádný dodatečný skript.
+        const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
 
         const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
         const url = URL.createObjectURL(blob);
@@ -727,9 +792,12 @@
         a.href = url;
         a.download = filename;
         a.click();
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
         alert('Formulář byl uložen!');
     }
+
+    updateProhlaseni();
+    autosizeAll();
 </script>
 </body>
 </html>
