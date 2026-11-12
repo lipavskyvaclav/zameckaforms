@@ -180,6 +180,10 @@
         }
         .stravne-table td.center { text-align: center; }
 
+        .stravne-vysledek { display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
+        .stravne-vysledek input { width: 70px; text-align: right; font-weight: 600; border: none; border-bottom: 1px solid #ccc; background: transparent; font-size: 10px; padding: 1px 2px; font-family: inherit; -moz-appearance: textfield; }
+        .stravne-vysledek input::-webkit-outer-spin-button, .stravne-vysledek input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .stravne-vysledek .kc { font-weight: 600; }
         .stravne-checkbox-wrap { display: flex; align-items: center; gap: 5px; justify-content: center; }
         .stravne-checkbox-wrap input[type="checkbox"] { width: 13px; height: 13px; accent-color: #4a7c59; cursor: pointer; flex-shrink: 0; }
         .stravne-checkbox-wrap span { font-size: 9px; color: #444; line-height: 1.2; }
@@ -251,6 +255,7 @@
             .vydaje-table td input, .stravne-table td input { border-bottom: 1px solid #999 !important; background: transparent !important; }
             input, textarea { border: none !important; border-bottom: 1px solid #000 !important; background: transparent !important; }
             .add-dropdown { display: none !important; }
+            #datum_uctovatele { border-bottom: none !important; }
             @page { size: A4; margin: 8mm 10mm; }
         }
     </style>
@@ -313,7 +318,7 @@
     <div class="section yellow">
         <div class="section-title">Stravné</div>
         <div style="font-size:9.5px; color:#666; margin-bottom:6px; font-style:italic;">
-            Automaticky vypočítáno z časů výdajů. Sazby dle § 163 zákoníku práce (zaměstnanci ve veřejných službách).
+            Automaticky vypočítáno z časů výdajů, částku lze ručně upravit. Sazby dle § 163 zákoníku práce (zaměstnanci ve veřejných službách).
         </div>
 
         <table class="stravne-table" id="stravne-table">
@@ -321,14 +326,13 @@
                 <tr>
                     <th style="width:110px;">Datum</th>
                     <th style="width:80px;">Hodin na cestě</th>
-                    <th style="width:90px;">Stravné (Kč)</th>
                     <th>Stravování poskytnuto bezplatně</th>
-                    <th style="width:90px;">Stravné po úpravě (Kč)</th>
+                    <th style="width:110px;">Stravné (Kč)</th>
                 </tr>
             </thead>
             <tbody id="stravne-tbody">
                 <tr id="stravne-placeholder">
-                    <td colspan="5" style="text-align:center; color:#aaa; font-style:italic; padding:10px;">
+                    <td colspan="4" style="text-align:center; color:#aaa; font-style:italic; padding:10px;">
                         Stravné se vypočítá automaticky po přidání výdajů s časovými údaji.
                     </td>
                 </tr>
@@ -373,10 +377,16 @@
 
     <hr class="thick">
     <div class="section yellow">
-        <div class="podpis-box">
-            <div class="podpis-field" style="max-width:260px;">
+        <div class="podpis-box" style="align-items:flex-end;">
+            <div class="podpis-field" style="flex:0 0 130px;">
+                <div class="podpis-line" style="background:#e8e3b8; display:flex; align-items:flex-end;">
+                    <input type="date" id="datum_uctovatele" style="border:none; background:transparent; text-align:center; font-size:11px; padding:2px 3px;">
+                </div>
+                <div class="podpis-label">Datum</div>
+            </div>
+            <div class="podpis-field" style="flex:0 0 260px;">
                 <div class="podpis-line" style="background:#e8e3b8;"></div>
-                <div class="podpis-label">Datum a podpis účtovatele</div>
+                <div class="podpis-label">Podpis účtovatele</div>
             </div>
         </div>
     </div>
@@ -627,6 +637,33 @@ function buildStravneData() {
 
 // stravné stav (zaškrtnutí bezplatného stravování) – uloženo jako mapa key->bool
 let bezplatneStravovani = {};
+// ručně přepsané výsledné stravné: key (datum) -> číslo v Kč
+let stravneOverride = {};
+
+function stravneVypocet(day) {
+    const sazba = stravneSazba(day.mins);
+    const bezplatne = bezplatneStravovani[day.key] || false;
+    const kraceni = bezplatne ? kraceníKoef(day.mins) : 0;
+    return Math.round(sazba * (1 - kraceni));
+}
+
+function stravneHodnota(day) {
+    const o = stravneOverride[day.key];
+    return (o !== undefined) ? o : stravneVypocet(day);
+}
+
+function setStravneOverride(key, raw) {
+    const v = parseFloat(String(raw).replace(',', '.'));
+    if (raw === '' || isNaN(v) || v < 0) delete stravneOverride[key];
+    else stravneOverride[key] = v;
+    recalcSouhrn();
+}
+
+function onStravneChange(key, checked) {
+    bezplatneStravovani[key] = checked;
+    delete stravneOverride[key]; // změna podmínek = výpočet znovu od nuly
+    recalc();
+}
 
 function recalcStravne() {
     const days = buildStravneData();
@@ -634,28 +671,33 @@ function recalcStravne() {
     tbody.innerHTML = '';
 
     if (days.length === 0) {
-        tbody.innerHTML = `<tr id="stravne-placeholder"><td colspan="5" style="text-align:center; color:#aaa; font-style:italic; padding:10px;">Stravné se vypočítá automaticky po přidání výdajů s časovými údaji.</td></tr>`;
+        tbody.innerHTML = `<tr id="stravne-placeholder"><td colspan="4" style="text-align:center; color:#aaa; font-style:italic; padding:10px;">Stravné se vypočítá automaticky po přidání výdajů s časovými údaji.</td></tr>`;
         return;
     }
 
     days.forEach(day => {
         const sazba = stravneSazba(day.mins);
         const bezplatne = bezplatneStravovani[day.key] || false;
-        const kraceni = bezplatne ? kraceníKoef(day.mins) : 0;
-        const vysledek = Math.round(sazba * (1 - kraceni));
+        const vysledek = stravneHodnota(day);
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${formatDateCZ(day.date)}</td>
             <td style="text-align:center;">${day.mins >= 60 ? formatHM(day.mins) : (day.mins + ' min')}</td>
-            <td style="text-align:right;">${sazba > 0 ? sazba + ' Kč' : '–'}</td>
             <td>
                 <div class="stravne-checkbox-wrap">
-                    <input type="checkbox" ${bezplatne ? 'checked' : ''} onchange="bezplatneStravovani['${day.key}']=this.checked; recalc()">
+                    <input type="checkbox" ${bezplatne ? 'checked' : ''} onchange="onStravneChange('${day.key}', this.checked)">
                     <span>Stravování poskytnuto bezplatně</span>
                 </div>
             </td>
-            <td style="text-align:right; font-weight:600;">${sazba > 0 ? vysledek + ' Kč' : '–'}</td>
+            <td>
+                <div class="stravne-vysledek">
+                    <input type="number" min="0" step="1" value="${vysledek}"
+                        oninput="setStravneOverride('${day.key}', this.value)"
+                        onchange="recalc()">
+                    <span class="kc">Kč</span>
+                </div>
+            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -675,10 +717,7 @@ function recalcSouhrn() {
     const days = buildStravneData();
     let stravneCelkem = 0;
     days.forEach(day => {
-        const sazba = stravneSazba(day.mins);
-        const bezplatne = bezplatneStravovani[day.key] || false;
-        const kraceni = bezplatne ? kraceníKoef(day.mins) : 0;
-        stravneCelkem += Math.round(sazba * (1 - kraceni));
+        stravneCelkem += stravneHodnota(day);
     });
 
     const celkem = jizdne + vedlejsi + noclez + stravneCelkem;
@@ -713,6 +752,7 @@ function newDocument() {
     rows = [];
     nextLetter = 0;
     bezplatneStravovani = {};
+    stravneOverride = {};
     renderRows();
 }
 
@@ -721,7 +761,7 @@ function saveForm() {
     // Uložení stavu rows a bezplatneStravovani do skrytého elementu
     let stateEl = document.getElementById('__state__');
     if (!stateEl) { stateEl = document.createElement('script'); stateEl.id = '__state__'; stateEl.type = 'application/json'; document.body.appendChild(stateEl); }
-    stateEl.textContent = JSON.stringify({ rows, nextLetter, bezplatneStravovani });
+    stateEl.textContent = JSON.stringify({ rows, nextLetter, bezplatneStravovani, stravneOverride });
 
     document.querySelectorAll('input[type="text"], input[type="date"], input[type="time"], input[type="number"]').forEach(el => el.setAttribute('value', el.value));
     document.querySelectorAll('textarea').forEach(el => el.textContent = el.value);
@@ -744,6 +784,7 @@ window.addEventListener('load', () => {
             rows = s.rows || [];
             nextLetter = s.nextLetter || 0;
             bezplatneStravovani = s.bezplatneStravovani || {};
+            stravneOverride = s.stravneOverride || {};
             renderRows();
         } catch(e) { recalc(); }
     } else {
