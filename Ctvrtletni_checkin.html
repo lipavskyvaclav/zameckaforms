@@ -142,31 +142,38 @@
     padding:1.5mm 2mm;
     color:#444;
   }
-  table.checklist th.optcol{text-align:center;width:24%;}
-  table.checklist th.notecol{width:26%;}
+  table.checklist th.optcol{text-align:center;width:23%;}
+  table.checklist th.notecol{width:35%;}
   table.checklist td{
     border-bottom:1px solid var(--gray-3);
     padding:2.6mm 2mm;
     vertical-align:middle;
     font-size:9.8pt;
   }
-  table.checklist td.question{width:50%;}
-  table.checklist td.optcell{text-align:center;width:24%;}
-  table.checklist td.notecell{width:26%;}
+  table.checklist td.question{width:42%;}
+  table.checklist td.optcell{text-align:center;width:23%;}
+  table.checklist td.notecell{width:35%;}
 
   .check-group{display:flex;gap:1mm;justify-content:center;flex-wrap:nowrap;}
 
+  /* poznámka: roste podle délky textu (contenteditable místo <input>) */
   .note-input{
+    display:block;
     width:100%;
+    min-height:6mm;
     border:none;
     border-bottom:1.2px solid var(--gray-4);
     font-family:"Helvetica Neue",Arial,sans-serif;
     font-size:8.6pt;
+    line-height:1.35;
     padding:1mm .5mm;
     background:transparent;
+    white-space:pre-wrap;
+    overflow-wrap:anywhere;
+    word-break:break-word;
   }
   .note-input:focus{outline:none;border-color:var(--ink);background:var(--gray-1);}
-  .note-input::placeholder{color:#b3b3b3;font-style:italic;}
+  .note-input:empty::before{content:attr(data-placeholder);color:#b3b3b3;font-style:italic;}
 
   .check-btn{
     font-family:"Helvetica Neue",Arial,sans-serif;
@@ -281,7 +288,8 @@
     .check-btn.selected{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     .edit{border-color:#555!important;}
     .note-input{border-bottom-color:#555!important;}
-    .field,tr,table.checklist{break-inside:avoid;}
+    .note-input:empty::before{content:""!important;}
+    .field,tr{break-inside:avoid;}
     table.checklist thead{display:table-header-group;}
     @page{size:A4;margin:12mm;}
   }
@@ -345,6 +353,8 @@
 
 <script>
 const STORAGE_KEY = "ctvrtletni_checkin_data_v1";
+// Při uložení do souboru se sem vloží vyplněná data (aby se soubor otevřel vyplněný).
+const EMBEDDED_STATE = /*STATE_START*/null/*STATE_END*/;
 
 const QUESTIONS = [
   "Objevily se opakované konflikty mezi žáky?",
@@ -363,6 +373,7 @@ const QUESTIONS = [
 const OPTIONS = ["ANO", "NE", "SLEDOVAT"];
 
 const checklistBody = document.getElementById("checklistBody");
+checklistBody.innerHTML = ""; // uložený soubor už řádky obsahuje – bez vyčištění by se zdvojily
 QUESTIONS.forEach((q, i) => {
   const tr = document.createElement("tr");
   tr.innerHTML = `
@@ -372,7 +383,7 @@ QUESTIONS.forEach((q, i) => {
         ${OPTIONS.map(o => `<button type="button" class="check-btn" data-opt="${o}"><span class="box"></span>${o}</button>`).join("")}
       </div>
     </td>
-    <td class="notecell"><input type="text" class="note-input" id="checklist_note_${i}" placeholder="poznámka…"></td>
+    <td class="notecell"><div class="note-input" id="checklist_note_${i}" contenteditable="true" data-placeholder="poznámka…"></div></td>
   `;
   checklistBody.appendChild(tr);
 });
@@ -391,7 +402,7 @@ document.querySelectorAll(".check-group").forEach(group => {
 function collectState() {
   const state = {inputs:{}, edits:{}, checks:[], notes:{}};
   document.querySelectorAll('input[type="text"]:not(.note-input)').forEach(el => state.inputs[el.id] = el.value);
-  document.querySelectorAll('.note-input').forEach(el => state.notes[el.id] = el.value);
+  document.querySelectorAll('.note-input').forEach(el => state.notes[el.id] = el.innerText.replace(/\n+$/,''));
   document.querySelectorAll(".edit").forEach(el => { if (el.id) state.edits[el.id] = el.innerHTML; });
   document.querySelectorAll(".check-group").forEach(g => {
     const sel = g.querySelector(".check-btn.selected");
@@ -403,7 +414,7 @@ function collectState() {
 function applyState(state) {
   if (!state) return;
   Object.entries(state.inputs || {}).forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.value = val; });
-  Object.entries(state.notes || {}).forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.value = val; });
+  Object.entries(state.notes || {}).forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.textContent = val; });
   Object.entries(state.edits || {}).forEach(([id, html]) => { const el = document.getElementById(id); if (el) el.innerHTML = html; });
   (state.checks || []).forEach((opt, i) => {
     if (!opt) return;
@@ -415,6 +426,7 @@ function applyState(state) {
 }
 
 function loadState() {
+  if (EMBEDDED_STATE) { applyState(EMBEDDED_STATE); return; }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) applyState(JSON.parse(raw));
@@ -443,7 +455,17 @@ function autoSaveSoon() {
 }
 
 document.addEventListener("input", e => {
-  if (e.target.classList && (e.target.classList.contains("edit") || e.target.tagName === "INPUT")) autoSaveSoon();
+  if (e.target.classList && (e.target.classList.contains("edit") || e.target.classList.contains("note-input") || e.target.tagName === "INPUT")) autoSaveSoon();
+});
+
+// vkládání do poznámek jen jako prostý text (bez cizího formátování)
+document.addEventListener("paste", e => {
+  const t = e.target;
+  if (t.classList && t.classList.contains("note-input")) {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+    document.execCommand("insertText", false, text);
+  }
 });
 
 // --- explicit "Uložit" = real file save, with a native save dialog when the browser supports it ---
@@ -458,10 +480,11 @@ async function exportToFile() {
   // bake current values into the DOM's attributes/content so the serialized
   // HTML re-opens pre-filled, without needing localStorage on the new machine
   document.querySelectorAll('input[type="text"]:not(.note-input)').forEach(el => el.setAttribute("value", el.value));
-  document.querySelectorAll('.note-input').forEach(el => el.setAttribute("value", el.value));
 
   const filename = buildExportFilename();
-  const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+  const stateJson = JSON.stringify(collectState()).replace(/</g, "\\u003c");
+  const htmlContent = ("<!DOCTYPE html>\n" + document.documentElement.outerHTML)
+    .replace(/\/\*STATE_START\*\/[\s\S]*?\/\*STATE_END\*\//, () => "/*STATE_START*/" + stateJson + "/*STATE_END*/");
 
   if (window.showSaveFilePicker) {
     try {
